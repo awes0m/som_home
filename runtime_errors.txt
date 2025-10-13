@@ -1,0 +1,67 @@
+nother exception was thrown: Assertion failed: org-dartlang-sdk:///lib/_engine/engine/window.dart:99:12
+Got object store box in database bookmarks_box.
+Got object store box in database tasks_box.
+Got object store box in database settings_box.
+══╡ EXCEPTION CAUGHT BY IMAGE RESOURCE SERVICE ╞════════════════════════════════════════════════════
+The following NetworkImageLoadException was thrown resolving an image stream completer:
+HTTP request failed, statusCode: 0, https://www.google.com/favicon.ico
+
+When the exception was thrown, this was the stack
+
+Image provider: NetworkImage("https://www.google.com/favicon.ico", scale: 1.0)
+Image key: NetworkImage("https://www.google.com/favicon.ico", scale: 1.0)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+DartError: setState() called after dispose(): _HomePageState#e265b(lifecycle state: defunct, not mounted)
+This error happens if you call setState() on a State object for a widget that no longer appears in the widget tree (e.g., whose parent widget no longer includes the widget in its build). This error can occur when code calls setState() from a timer or an animation callback.
+The preferred solution is to cancel the timer or stop listening to the animation in the dispose() callback. Another solution is to check the "mounted" property of this object before calling setState() to ensure the object is still in the tree.
+This error might indicate a memory leak if setState() is being called because another object is retaining a reference to this State object after it has been removed from the tree. To avoid memory leaks, consider breaking the reference to this object during dispose().
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/errors.dart 274:3       throw_
+errors.dart:274
+package:flutter/src/widgets/framework.dart 1163:9                                 <fn>
+framework.dart:1163
+package:flutter/src/widgets/framework.dart 1197:14                                setState
+framework.dart:1197
+package:som_home/pages/homepage.dart 30:5                                         [_updateTime]
+homepage.dart:30
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
+operations.dart:118
+dart-sdk/lib/async/future.dart 419:42                                             <fn>
+future.dart:419
+dart-sdk/lib/_internal/js_dev_runtime/private/isolate_helper.dart 47:11           internalCallback
+isolate_helper.dart:47
+DartError: setState() called after dispose(): _FlappyBirdGameState#20e45(lifecycle state: defunct, not mounted)
+This error happens if you call setState() on a State object for a widget that no longer appears in the widget tree (e.g., whose parent widget no longer includes the widget in its build). This error can occur when code calls setState() from a timer or an animation callback.
+The preferred solution is to cancel the timer or stop listening to the animation in the dispose() callback. Another solution is to check the "mounted" property of this object before calling setState() to ensure the object is still in the tree.
+This error might indicate a memory leak if setState() is being called because another object is retaining a reference to this State object after it has been removed from the tree. To avoid memory leaks, consider breaking the reference to this object during dispose().
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/errors.dart 274:3       throw_
+errors.dart:274
+package:flutter/src/widgets/framework.dart 1163:9                                 <fn>
+framework.dart:1163
+package:flutter/src/widgets/framework.dart 1197:14                                setState
+framework.dart:1197
+package:som_home/games/flappy_bird_game.dart 25:5                                 [_tick]
+flappy_bird_game.dart:25
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
+operations.dart:118
+package:som_home/games/flappy_bird_game.dart 100:13                               <fn>
+flappy_bird_game.dart:100
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 623:19               <fn>
+async_patch.dart:623
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 648:23               <fn>
+async_patch.dart:648
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 594:19               <fn>
+async_patch.dart:594
+dart-sdk/lib/async/zone.dart 1849:54                                              runUnary
+zone.dart:1849
+dart-sdk/lib/async/future_impl.dart 222:18                                        handleValue
+future_impl.dart:222
+dart-sdk/lib/async/future_impl.dart 948:44                                        handleValueCallback
+future_impl.dart:948
+dart-sdk/lib/async/future_impl.dart 977:13                                        _propagateToListeners
+future_impl.dart:977
+dart-sdk/lib/async/future_impl.dart 711:7                                         [_complete]
+future_impl.dart:711
+dart-sdk/lib/async/future.dart 415:15                                             <fn>
+future.dart:415
+dart-sdk/lib/_internal/js_dev_runtime/private/isolate_helper.dart 47:11           internalCallback
+isolate_helper.dart:47
