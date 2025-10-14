@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:file_picker/file_picker.dart';
 import '../core/models/models.dart';
 import '../core/providers/bookmarks_provider.dart';
 import '../widgets/dialog_widget.dart';
@@ -16,6 +18,46 @@ class BookmarksPage extends StatefulWidget {
 class _BookmarksPageState extends State<BookmarksPage> {
   String? _selectedFolder;
   final _searchController = TextEditingController();
+
+  void _showImportDialog() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['html', 'json'],
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.single.bytes != null) {
+        final bytes = result.files.single.bytes!;
+        final content = utf8.decode(bytes);
+        final fileName = result.files.single.name.toLowerCase();
+        
+        final provider = Provider.of<BookmarksProvider>(context, listen: false);
+        
+        if (fileName.endsWith('.html')) {
+          provider.importFromHtml(content);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('HTML bookmarks imported successfully')),
+            );
+          }
+        } else if (fileName.endsWith('.json')) {
+          provider.importFromJson(content);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('JSON bookmarks imported successfully')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error importing bookmarks: $e')),
+        );
+      }
+    }
+  }
 
   void _showAddOrEditDialog([Bookmark? bookmark]) async {
     final titleController = TextEditingController(text: bookmark?.title ?? '');
@@ -174,6 +216,12 @@ class _BookmarksPageState extends State<BookmarksPage> {
                             setState(() => _selectedFolder = value),
                       ),
                       const SizedBox(width: 12),
+                      IconButton(
+                        onPressed: _showImportDialog,
+                        icon: const Icon(Icons.file_upload),
+                        tooltip: 'Import bookmarks (HTML/JSON)',
+                      ),
+                      const SizedBox(width: 8),
                       FilledButton.icon(
                         onPressed: () => _showAddOrEditDialog(),
                         icon: const Icon(Icons.add),

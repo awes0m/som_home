@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../storage/hive_service.dart';
 import '../models/models.dart';
+import '../utils/html_bookmark_parser.dart';
 
 class BookmarksProvider with ChangeNotifier {
   List<Bookmark> _bookmarks = [];
@@ -89,6 +90,22 @@ class BookmarksProvider with ChangeNotifier {
       }
     } catch (_) {
       // Ignore parse errors
+    }
+  }
+
+  void importFromHtml(String htmlString) {
+    try {
+      final bookmarks = HtmlBookmarkParser.parseHtmlBookmarks(htmlString);
+      for (var bookmark in bookmarks) {
+        // Check if bookmark already exists to avoid duplicates
+        final exists = _bookmarks.any((b) => b.url == bookmark.url && b.title == bookmark.title);
+        if (!exists) {
+          addBookmark(bookmark);
+        }
+      }
+    } catch (e) {
+      // Ignore parse errors
+      // Error importing HTML bookmarks: $e
     }
   }
 
