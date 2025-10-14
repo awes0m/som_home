@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:convert';
+
+import 'dart:html' as html;
 import '../core/providers/theme_provider.dart';
 import '../core/providers/background_provider.dart';
 import '../core/providers/bookmarks_provider.dart';
@@ -21,7 +21,7 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  late BackupService _backupService;
+  BackupService? _backupService;
 
   @override
   void initState() {
@@ -34,17 +34,23 @@ class _SettingsPageState extends State<SettingsPage> {
       );
       _nameController.text = greetingProvider.displayName;
     });
-  }
-
-  Future<void> _initBackupService() async {
-    final bookmarksBox = await Hive.openBox('bookmarks_box');
-    final tasksBox = await Hive.openBox('tasks_box');
-    final settingsBox = await Hive.openBox('settings_box');
-    _backupService = BackupService(
-      bookmarksBox: bookmarksBox,
-      tasksBox: tasksBox,
-      settingsBox: settingsBox,
-    );
+  }  Future<void> _initBackupService() async {
+    try {
+      // Use existing opened boxes from HiveService instead of opening them again
+      final bookmarksBox = HiveService.getBookmarksBox();
+      final tasksBox = HiveService.getTasksBox();
+      final settingsBox = HiveService.getSettingsBox();
+      
+      _backupService = BackupService(
+        bookmarksBox: bookmarksBox,
+        tasksBox: tasksBox,
+        settingsBox: settingsBox,
+      );
+    } catch (e) {
+      debugPrint('Error initializing backup service: $e');
+      // If boxes are not available, we can still continue without backup functionality
+      // The UI will handle errors when backup operations are attempted
+    }
   }
 
   final List<String> defaultWallpapers = [
@@ -88,31 +94,45 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
-  }
-
-  Future<void> _pickLocalImage() async {
+  }  Future<void> _pickLocalImage() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-      );
+      // Web-only image upload using HTML input element
+      final html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
+      uploadInput.accept = 'image/*';
+      uploadInput.click();
 
-      if (result != null && result.files.single.bytes != null) {
-        final bytes = result.files.single.bytes!;
-        final base64Image = base64Encode(bytes);
-        final dataUrl = 'data:image/png;base64,$base64Image';
+      uploadInput.onChange.listen((e) async {
+        final files = uploadInput.files;
+        if (files!.isEmpty) return;
 
-        if (mounted) {
-          Provider.of<BackgroundProvider>(
-            context,
-            listen: false,
-          ).setBackground(dataUrl, 'local');
-        }
-      }
+        final file = files[0];
+        final reader = html.FileReader();
+        
+        reader.onLoadEnd.listen((e) async {
+          try {
+            final dataUrl = reader.result as String;
+            if (mounted) {
+              Provider.of<BackgroundProvider>(
+                context,
+                listen: false,
+              ).setBackground(dataUrl, 'local');
+            }
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error loading image: $e')),
+              );
+            }
+          }
+        });
+        
+        reader.readAsDataUrl(file);
+      });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading image: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading image: $e')),
+        );
       }
     }
   }
@@ -355,63 +375,100 @@ class _SettingsPageState extends State<SettingsPage> {
                       // Data Management
                       _SettingsSection(
                         title: 'Data',
-                        children: [
-                          ListTile(
-                            leading: const Icon(Icons.upload_file),
+                        children: [                          ListTile(
+                            leading: const Icon(Icons.download),
                             title: const Text('Export Configuration'),
                             subtitle: const Text(
-                              'Save bookmarks, tasks, and settings to a JSON file',
-                            ),
-                            onTap: () async {
-                              await _backupService.pickAndExportFile(context);
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Configuration exported!'),
-                                  ),
-                                );
+                              'Download bookmarks, tasks, and settings as a JSON file',
+                            ),                            onTap: () async {
+                              if (_backupService == null) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Backup service is not initialized'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                                return;
+                              }
+                              
+                              try {
+                                await _backupService!.pickAndExportFile(context);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Configuration exported successfully!'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Export failed: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
                               }
                             },
-                          ),
-                          ListTile(
-                            leading: const Icon(Icons.download),
+                          ),                          ListTile(
+                            leading: const Icon(Icons.upload),
                             title: const Text('Import Configuration'),
                             subtitle: const Text(
-                              'Load bookmarks, tasks, and settings from a JSON file',
-                            ),
-                            onTap: () async {
-                              await _backupService.pickAndImportFile();
-                              if (context.mounted) {
-                                // Notify providers to update UI
+                              'Upload and load bookmarks, tasks, and settings from a JSON file',
+                            ),                            onTap: () async {
+                              if (_backupService == null) {
                                 if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Backup service is not initialized'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                                return;
+                              }
+                              
+                              try {
+                                await _backupService!.pickAndImportFile();
+                                if (context.mounted) {
+                                  // Notify providers to update UI
                                   Provider.of<BookmarksProvider>(
                                     context,
                                     listen: false,
                                   ).loadBookmarks();
-                                }
-                                if (context.mounted) {
+                                  
                                   Provider.of<TasksProvider>(
                                     context,
                                     listen: false,
                                   ).loadTasks();
-                                }
-                                if (context.mounted) {
+                                  
                                   Provider.of<BackgroundProvider>(
                                     context,
                                     listen: false,
                                   ).loadBackground();
-                                }
-                                if (context.mounted) {
+                                  
                                   Provider.of<ThemeProvider>(
                                     context,
                                     listen: false,
                                   ).loadThemeMode();
-                                }
-
-                                if (context.mounted) {
+                                  
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Configuration imported!'),
+                                      content: Text('Configuration imported successfully!'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Import failed: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
                                     ),
                                   );
                                 }

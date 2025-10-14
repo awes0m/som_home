@@ -22,20 +22,15 @@ dependencies:
   # Storage
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  shared_preferences: ^2.2.2
-  
-  # URL & File Handling
+  shared_preferences: ^2.2.2  # URL Handling
   url_launcher: ^6.2.3
-  file_picker: ^10.3.3
-  path_provider: ^2.1.4
   
   # Game Engine
-  flame: ^1.15.0
-  
-  # Utilities
+  flame: ^1.15.0  # Utilities
   intl: ^0.19.0
   uuid: ^4.3.3
   html: ^0.15.4
+  file_picker: ^8.0.0+1
 
 dev_dependencies:
   flutter_test:

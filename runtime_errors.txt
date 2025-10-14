@@ -1,67 +1,310 @@
-nother exception was thrown: Assertion failed: org-dartlang-sdk:///lib/_engine/engine/window.dart:99:12
-Got object store box in database bookmarks_box.
+ot object store box in database bookmarks_box.
 Got object store box in database tasks_box.
 Got object store box in database settings_box.
-══╡ EXCEPTION CAUGHT BY IMAGE RESOURCE SERVICE ╞════════════════════════════════════════════════════
-The following NetworkImageLoadException was thrown resolving an image stream completer:
-HTTP request failed, statusCode: 0, https://www.google.com/favicon.ico
+══╡ EXCEPTION CAUGHT BY SCHEDULER LIBRARY ╞═════════════════════════════════════════════════════════
+The following NativeError object was thrown during a scheduler callback:
+  Error: TypeError: Instance of 'LegacyJavaScriptObject': type 'LegacyJavaScriptObject' is not a
+subtype of type 'DiagnosticsNode'
 
-When the exception was thrown, this was the stack
-
-Image provider: NetworkImage("https://www.google.com/favicon.ico", scale: 1.0)
-Image key: NetworkImage("https://www.google.com/favicon.ico", scale: 1.0)
+When the exception was thrown, this was the stack:
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/errors.dart 274:3       throw_
+errors.dart:274
+dart-sdk/lib/_internal/js_shared/lib/rti.dart 1503:3                              _generalAsCheckImplementation
+rti.dart:1503
+dart-sdk/lib/_internal/js_dev_runtime/private/js_array.dart 92:14                 add]
+js_array.dart:92
+package:flutter/src/foundation/diagnostics.dart 3047:7                            <fn>
+diagnostics.dart:3047
+package:flutter/src/foundation/diagnostics.dart 3048:14                           add
+diagnostics.dart:3048
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
+operations.dart:118
+dart-sdk/lib/_internal/js_dev_runtime/private/js_array.dart 219:7                 forEach]
+js_array.dart:219
+package:flutter/src/foundation/assertions.dart 735:7                              debugFillProperties
+assertions.dart:735
+package:flutter/src/foundation/diagnostics.dart 2924:11                           <fn>
+diagnostics.dart:2924
+package:flutter/src/foundation/diagnostics.dart 2926:16                           get builder
+diagnostics.dart:2926
+package:flutter/src/foundation/assertions.dart 1303:56                            get builder
+assertions.dart:1303
+package:flutter/src/foundation/diagnostics.dart 2945:68                           getProperties
+diagnostics.dart:2945
+package:flutter/src/foundation/diagnostics.dart 1270:62                           [_debugRender]
+diagnostics.dart:1270
+package:flutter/src/foundation/diagnostics.dart 1137:14                           render
+diagnostics.dart:1137
+package:flutter/src/foundation/assertions.dart 1039:44                            dumpErrorToConsole
+assertions.dart:1039
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
+operations.dart:118
+package:flutter/src/foundation/assertions.dart 1203:14                            reportError
+assertions.dart:1203
+package:flutter/src/widgets/framework.dart 7305:16                                _reportException
+framework.dart:7305
+package:flutter/src/widgets/framework.dart 2697:7                                 [_tryRebuild]
+framework.dart:2697
+package:flutter/src/widgets/framework.dart 2752:11                                [_flushDirtyElements]
+framework.dart:2752
+package:flutter/src/widgets/framework.dart 3056:17                                buildScope
+framework.dart:3056
+package:flutter/src/widgets/binding.dart 1259:9                                   drawFrame
+binding.dart:1259
+package:flutter/src/rendering/binding.dart 495:5                                  [_handlePersistentFrameCallback]
+binding.dart:495
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
+operations.dart:118
+package:flutter/src/scheduler/binding.dart 1434:7                                 [_invokeFrameCallback]
+binding.dart:1434
+package:flutter/src/scheduler/binding.dart 1347:9                                 handleDrawFrame
+binding.dart:1347
+package:flutter/src/scheduler/binding.dart 1200:5                                 [_handleDrawFrame]
+binding.dart:1200
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
+operations.dart:118
+lib/_engine/engine/platform_dispatcher.dart 1522:5                                invoke
+platform_dispatcher.dart:1522
+lib/_engine/engine/platform_dispatcher.dart 265:5                                 invokeOnDrawFrame
+platform_dispatcher.dart:265
+lib/_engine/engine/frame_service.dart 192:32                                      [_renderFrame]
+frame_service.dart:192
+lib/_engine/engine/frame_service.dart 99:9                                        <fn>
+frame_service.dart:99
+dart-sdk/lib/async/zone.dart 1849:54                                              runUnary
+zone.dart:1849
+dart-sdk/lib/async/zone.dart 1804:26                                              <fn>
+zone.dart:1804
+dart-sdk/lib/_internal/js_dev_runtime/patch/js_allow_interop_patch.dart 224:27    _callDartFunctionFast1
+js_allow_interop_patch.dart:224
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-DartError: setState() called after dispose(): _HomePageState#e265b(lifecycle state: defunct, not mounted)
-This error happens if you call setState() on a State object for a widget that no longer appears in the widget tree (e.g., whose parent widget no longer includes the widget in its build). This error can occur when code calls setState() from a timer or an animation callback.
-The preferred solution is to cancel the timer or stop listening to the animation in the dispose() callback. Another solution is to check the "mounted" property of this object before calling setState() to ensure the object is still in the tree.
-This error might indicate a memory leak if setState() is being called because another object is retaining a reference to this State object after it has been removed from the tree. To avoid memory leaks, consider breaking the reference to this object during dispose().
+DartError: HiveError: The box "bookmarks_box" is already open and of type Box<String>.
 dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/errors.dart 274:3       throw_
 errors.dart:274
-package:flutter/src/widgets/framework.dart 1163:9                                 <fn>
-framework.dart:1163
-package:flutter/src/widgets/framework.dart 1197:14                                setState
-framework.dart:1197
-package:som_home/pages/homepage.dart 30:5                                         [_updateTime]
-homepage.dart:30
-dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
-operations.dart:118
-dart-sdk/lib/async/future.dart 419:42                                             <fn>
-future.dart:419
-dart-sdk/lib/_internal/js_dev_runtime/private/isolate_helper.dart 47:11           internalCallback
-isolate_helper.dart:47
-DartError: setState() called after dispose(): _FlappyBirdGameState#20e45(lifecycle state: defunct, not mounted)
-This error happens if you call setState() on a State object for a widget that no longer appears in the widget tree (e.g., whose parent widget no longer includes the widget in its build). This error can occur when code calls setState() from a timer or an animation callback.
-The preferred solution is to cancel the timer or stop listening to the animation in the dispose() callback. Another solution is to check the "mounted" property of this object before calling setState() to ensure the object is still in the tree.
-This error might indicate a memory leak if setState() is being called because another object is retaining a reference to this State object after it has been removed from the tree. To avoid memory leaks, consider breaking the reference to this object during dispose().
-dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/errors.dart 274:3       throw_
-errors.dart:274
-package:flutter/src/widgets/framework.dart 1163:9                                 <fn>
-framework.dart:1163
-package:flutter/src/widgets/framework.dart 1197:14                                setState
-framework.dart:1197
-package:som_home/games/flappy_bird_game.dart 25:5                                 [_tick]
-flappy_bird_game.dart:25
-dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
-operations.dart:118
-package:som_home/games/flappy_bird_game.dart 100:13                               <fn>
-flappy_bird_game.dart:100
+package:hive/src/hive_impl.dart 182:9                                             [_getBoxInternal]
+hive_impl.dart:182
+package:hive/src/hive_impl.dart 197:33                                            box
+hive_impl.dart:197
+package:hive/src/hive_impl.dart 80:16                                             <fn>
+hive_impl.dart:80
 dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 623:19               <fn>
 async_patch.dart:623
 dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 648:23               <fn>
 async_patch.dart:648
-dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 594:19               <fn>
-async_patch.dart:594
-dart-sdk/lib/async/zone.dart 1849:54                                              runUnary
-zone.dart:1849
-dart-sdk/lib/async/future_impl.dart 222:18                                        handleValue
-future_impl.dart:222
-dart-sdk/lib/async/future_impl.dart 948:44                                        handleValueCallback
-future_impl.dart:948
-dart-sdk/lib/async/future_impl.dart 977:13                                        _propagateToListeners
-future_impl.dart:977
-dart-sdk/lib/async/future_impl.dart 711:7                                         [_complete]
-future_impl.dart:711
-dart-sdk/lib/async/future.dart 415:15                                             <fn>
-future.dart:415
-dart-sdk/lib/_internal/js_dev_runtime/private/isolate_helper.dart 47:11           internalCallback
-isolate_helper.dart:47
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 542:3                _asyncStartSync
+async_patch.dart:542
+package:hive/src/hive_impl.dart 61:22                                             [_openBox]
+hive_impl.dart:61
+package:hive/src/hive_impl.dart 142:18                                            <fn>
+hive_impl.dart:142
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 623:19               <fn>
+async_patch.dart:623
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 648:23               <fn>
+async_patch.dart:648
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 542:3                _asyncStartSync
+async_patch.dart:542
+package:hive/src/hive_impl.dart 128:18                                            openBox
+hive_impl.dart:128
+package:som_home/pages/settings_page.dart 40:37                                   <fn>
+settings_page.dart:40
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 623:19               <fn>
+async_patch.dart:623
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 648:23               <fn>
+async_patch.dart:648
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 542:3                _asyncStartSync
+async_patch.dart:542
+package:som_home/pages/settings_page.dart 39:16                                   [_initBackupService]
+settings_page.dart:39
+package:som_home/pages/settings_page.dart 29:5                                    initState
+settings_page.dart:29
+package:flutter/src/widgets/framework.dart 5852:55                                [_firstBuild]
+framework.dart:5852
+package:flutter/src/widgets/framework.dart 5699:5                                 mount
+framework.dart:5699
+package:flutter/src/widgets/framework.dart 4548:15                                inflateWidget
+framework.dart:4548
+package:flutter/src/widgets/framework.dart 3998:20                                updateChild
+framework.dart:3998
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 6051:5                                 update
+framework.dart:6051
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 4139:32                                updateChildren
+framework.dart:4139
+package:flutter/src/widgets/framework.dart 7202:17                                update
+framework.dart:7202
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 7025:14                                update
+framework.dart:7025
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 7025:14                                update
+framework.dart:7025
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 5797:5                                 update
+framework.dart:5797
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 5797:5                                 update
+framework.dart:5797
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 5797:5                                 update
+framework.dart:5797
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 6051:5                                 update
+framework.dart:6051
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 6051:5                                 update
+framework.dart:6051
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 4139:32                                updateChildren
+framework.dart:4139
+package:flutter/src/widgets/framework.dart 7202:17                                update
+framework.dart:7202
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 6051:5                                 update
+framework.dart:6051
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5884:11                                performRebuild
+framework.dart:5884
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 5909:5                                 update
+framework.dart:5909
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5884:11                                performRebuild
+framework.dart:5884
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 5909:5                                 update
+framework.dart:5909
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 6051:5                                 update
+framework.dart:6051
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5884:11                                performRebuild
+framework.dart:5884
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 5909:5                                 update
+framework.dart:5909
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 7025:14                                update
+framework.dart:7025
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 6051:5                                 update
+framework.dart:6051
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 7025:14                                update
+framework.dart:7025
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5884:11                                performRebuild
+framework.dart:5884
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 5909:5                                 update
+framework.dart:5909
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5884:11                                performRebuild
+framework.dart:5884
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 5909:5                                 update
+framework.dart:5909
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 6051:5                                 update
+framework.dart:6051
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 6051:5                                 update
+framework.dart:6051
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 6051:5                                 update
+framework.dart:6051
+package:flutter/src/widgets/framework.dart 3982:14                                updateChild
+framework.dart:3982
+package:flutter/src/widgets/framework.dart 5747:16                                performRebuild
+framework.dart:5747
+package:flutter/src/widgets/framework.dart 5884:11                                performRebuild
+framework.dart:5884
+package:flutter/src/widgets/framework.dart 5435:7                                 rebuild
+framework.dart:5435
+package:flutter/src/widgets/framework.dart 5909:5                                 update
+framework.dart:5909
+package:flutter/src/widgets/frame

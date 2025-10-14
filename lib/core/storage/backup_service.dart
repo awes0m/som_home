@@ -1,16 +1,17 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html; 
+import 'package:file_picker/file_picker.dart';
 
 import '../../widgets/dialog_widget.dart';
 import 'backup_file_saver.dart';
 
 class BackupService {
-  final Box bookmarksBox;
-  final Box tasksBox;
-  final Box settingsBox;
+  final Box<String> bookmarksBox;
+  final Box<String> tasksBox;
+  final Box<dynamic> settingsBox;
 
   BackupService({
     required this.bookmarksBox,
@@ -40,21 +41,28 @@ class BackupService {
     // Clear existing data
     await bookmarksBox.clear();
     await tasksBox.clear();
-    await settingsBox.clear();
-
-    // Restore bookmarks
+    await settingsBox.clear();    // Restore bookmarks
     for (var item in data['bookmarks']) {
-      // Assuming Bookmark model can be created from a map
-      // You might need to adjust this based on your actual Bookmark model
-      // For now, directly add the map as a dynamic object
-      await bookmarksBox.add(item);
+      // Convert the item back to JSON string as that's how it's stored in the box
+      if (item is String) {
+        // If it's already a string, add it directly
+        await bookmarksBox.add(item);
+      } else {
+        // If it's a map/object, encode it to JSON string
+        await bookmarksBox.add(jsonEncode(item));
+      }
     }
 
     // Restore tasks
     for (var item in data['tasks']) {
-      // Assuming Task model can be created from a map
-      // For now, directly add the map as a dynamic object
-      await tasksBox.add(item);
+      // Convert the item back to JSON string as that's how it's stored in the box
+      if (item is String) {
+        // If it's already a string, add it directly
+        await tasksBox.add(item);
+      } else {
+        // If it's a map/object, encode it to JSON string
+        await tasksBox.add(jsonEncode(item));
+      }
     }
 
     // Restore settings
@@ -74,11 +82,7 @@ class BackupService {
       if (savedLocation == null) {
         // User likely cancelled the operation.
         return;
-      }
-
-      final String message = kIsWeb
-          ? 'Your configuration download should begin automatically.'
-          : 'Your configuration has been saved to $savedLocation.';
+      }      final String message = 'Your configuration download should begin automatically.';
 
       ConfirmDialog.show(
         context: context,
@@ -93,40 +97,33 @@ class BackupService {
 
   Future<void> pickAndImportFile() async {
     try {
+      // Use file_picker for better cross-platform support
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
+        allowMultiple: false,
       );
 
-      if (result == null) {
-        // User canceled the picker
-        return;
-      }
-
-      String jsonString;
-      
-      if (kIsWeb) {
-        // On web, use bytes since file paths are not available
-        if (result.files.single.bytes == null) {
-          debugPrint('No file bytes available');
-          return;
-        }
+      if (result != null && result.files.single.bytes != null) {
+        // For web, use bytes
         final bytes = result.files.single.bytes!;
-        jsonString = utf8.decode(bytes);
-      } else {
-        // On desktop/mobile, use file path
-        if (result.files.single.path == null) {
-          debugPrint('No file path available');
-          return;
+        final jsonString = utf8.decode(bytes);
+        await importConfiguration(jsonString);
+        debugPrint('Configuration imported successfully');
+      } else if (result != null && result.files.single.path != null) {
+        // For other platforms, use path (fallback, though this is primarily for web)
+        final file = result.files.single;
+        if (file.path != null) {
+          // This would be for non-web platforms
+          debugPrint('File path import not implemented for non-web platforms');
         }
-        final File file = File(result.files.single.path!);
-        jsonString = await file.readAsString();
+      } else {
+        debugPrint('No file selected for import');
       }
-      
-      await importConfiguration(jsonString);
     } catch (e, stackTrace) {
       debugPrint('Error importing configuration: $e');
       debugPrintStack(stackTrace: stackTrace);
+      rethrow; // Re-throw to allow UI to handle the error
     }
   }
 }
