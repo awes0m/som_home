@@ -31,6 +31,8 @@ dependencies:
   uuid: ^4.3.3
   html: ^0.15.4
   file_picker: ^8.0.0+1
+  web: ^1.1.1
+  js_interop: ^0.0.1
 
 dev_dependencies:
   flutter_test:
