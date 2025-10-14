@@ -1,8 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html; 
 import 'package:file_picker/file_picker.dart';
 
 import '../../widgets/dialog_widget.dart';
