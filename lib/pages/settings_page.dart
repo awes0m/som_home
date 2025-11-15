@@ -7,9 +7,9 @@ import '../core/providers/background_provider.dart';
 import '../core/providers/bookmarks_provider.dart';
 import '../core/providers/tasks_provider.dart';
 import '../core/providers/greeting_provider.dart';
+import '../core/providers/auth_provider.dart';
 import '../core/storage/hive_service.dart';
 import '../core/storage/backup_service.dart';
-import 'package:hive/hive.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -34,13 +34,15 @@ class _SettingsPageState extends State<SettingsPage> {
       );
       _nameController.text = greetingProvider.displayName;
     });
-  }  Future<void> _initBackupService() async {
+  }
+
+  Future<void> _initBackupService() async {
     try {
       // Use existing opened boxes from HiveService instead of opening them again
       final bookmarksBox = HiveService.getBookmarksBox();
       final tasksBox = HiveService.getTasksBox();
       final settingsBox = HiveService.getSettingsBox();
-      
+
       _backupService = BackupService(
         bookmarksBox: bookmarksBox,
         tasksBox: tasksBox,
@@ -94,10 +96,13 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
-  }  Future<void> _pickLocalImage() async {
+  }
+
+  Future<void> _pickLocalImage() async {
     try {
       // Web-only image upload using HTML input element
-      final html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
+      final html.FileUploadInputElement uploadInput =
+          html.FileUploadInputElement();
       uploadInput.accept = 'image/*';
       uploadInput.click();
 
@@ -107,7 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
         final file = files[0];
         final reader = html.FileReader();
-        
+
         reader.onLoadEnd.listen((e) async {
           try {
             final dataUrl = reader.result as String;
@@ -125,14 +130,14 @@ class _SettingsPageState extends State<SettingsPage> {
             }
           }
         });
-        
+
         reader.readAsDataUrl(file);
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading image: $e')));
       }
     }
   }
@@ -162,6 +167,157 @@ class _SettingsPageState extends State<SettingsPage> {
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Reset'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _syncToCloud(BuildContext context) async {
+    try {
+      final bookmarksProvider = Provider.of<BookmarksProvider>(
+        context,
+        listen: false,
+      );
+      final tasksProvider = Provider.of<TasksProvider>(context, listen: false);
+
+      // Show loading dialog
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Syncing to cloud...'),
+            ],
+          ),
+        ),
+      );
+
+      await HiveService.syncBookmarksToCloud(bookmarksProvider.bookmarks);
+      await HiveService.syncTasksToCloud(tasksProvider.tasks);
+
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Data synced to cloud successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sync failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _syncFromCloud(BuildContext context) async {
+    try {
+      final bookmarksProvider = Provider.of<BookmarksProvider>(
+        context,
+        listen: false,
+      );
+      final tasksProvider = Provider.of<TasksProvider>(context, listen: false);
+
+      // Show loading dialog
+      if (!context.mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Downloading from cloud...'),
+            ],
+          ),
+        ),
+      );
+
+      final bookmarks = await HiveService.loadBookmarksFromCloud();
+      final tasks = await HiveService.loadTasksFromCloud();
+
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog
+
+        if (bookmarks.isEmpty && tasks.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No data found in cloud'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        }
+
+        // Update providers with cloud data
+        if (bookmarks.isNotEmpty) {
+          bookmarksProvider.setBookmarks(bookmarks);
+        }
+        if (tasks.isNotEmpty) {
+          tasksProvider.setTasks(tasks);
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Data downloaded from cloud successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Download failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showSignOutDialog(
+    BuildContext context,
+    AuthProvider authProvider,
+  ) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sign Out'),
+        content: const Text('Are you sure you want to sign out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              await authProvider.signOut();
+              if (context.mounted) {
+                Navigator.pop(context); // Close dialog
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/sign-in', (route) => false);
+              }
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Sign Out'),
           ),
         ],
       ),
@@ -375,30 +531,38 @@ class _SettingsPageState extends State<SettingsPage> {
                       // Data Management
                       _SettingsSection(
                         title: 'Data',
-                        children: [                          ListTile(
+                        children: [
+                          ListTile(
                             leading: const Icon(Icons.download),
                             title: const Text('Export Configuration'),
                             subtitle: const Text(
                               'Download bookmarks, tasks, and settings as a JSON file',
-                            ),                            onTap: () async {
+                            ),
+                            onTap: () async {
                               if (_backupService == null) {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Backup service is not initialized'),
+                                      content: Text(
+                                        'Backup service is not initialized',
+                                      ),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
                                 }
                                 return;
                               }
-                              
+
                               try {
-                                await _backupService!.pickAndExportFile(context);
+                                await _backupService!.pickAndExportFile(
+                                  context,
+                                );
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Configuration exported successfully!'),
+                                      content: Text(
+                                        'Configuration exported successfully!',
+                                      ),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
@@ -407,31 +571,37 @@ class _SettingsPageState extends State<SettingsPage> {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Export failed: ${e.toString()}'),
+                                      content: Text(
+                                        'Export failed: ${e.toString()}',
+                                      ),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
                                 }
                               }
                             },
-                          ),                          ListTile(
+                          ),
+                          ListTile(
                             leading: const Icon(Icons.upload),
                             title: const Text('Import Configuration'),
                             subtitle: const Text(
                               'Upload and load bookmarks, tasks, and settings from a JSON file',
-                            ),                            onTap: () async {
+                            ),
+                            onTap: () async {
                               if (_backupService == null) {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Backup service is not initialized'),
+                                      content: Text(
+                                        'Backup service is not initialized',
+                                      ),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
                                 }
                                 return;
                               }
-                              
+
                               try {
                                 await _backupService!.pickAndImportFile();
                                 if (context.mounted) {
@@ -440,25 +610,27 @@ class _SettingsPageState extends State<SettingsPage> {
                                     context,
                                     listen: false,
                                   ).loadBookmarks();
-                                  
+
                                   Provider.of<TasksProvider>(
                                     context,
                                     listen: false,
                                   ).loadTasks();
-                                  
+
                                   Provider.of<BackgroundProvider>(
                                     context,
                                     listen: false,
                                   ).loadBackground();
-                                  
+
                                   Provider.of<ThemeProvider>(
                                     context,
                                     listen: false,
                                   ).loadThemeMode();
-                                  
+
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Configuration imported successfully!'),
+                                      content: Text(
+                                        'Configuration imported successfully!',
+                                      ),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
@@ -467,7 +639,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Import failed: ${e.toString()}'),
+                                      content: Text(
+                                        'Import failed: ${e.toString()}',
+                                      ),
                                       backgroundColor: Colors.red,
                                     ),
                                   );
@@ -487,6 +661,89 @@ class _SettingsPageState extends State<SettingsPage> {
                             onTap: _showResetDialog,
                           ),
                         ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Cloud Sync Section
+                      Consumer<AuthProvider>(
+                        builder: (context, authProvider, _) {
+                          if (!authProvider.isAuthenticated) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return Column(
+                            children: [
+                              _SettingsSection(
+                                title: 'Cloud Sync',
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.cloud_upload),
+                                    title: const Text('Sync to Cloud'),
+                                    subtitle: const Text(
+                                      'Upload bookmarks and tasks to Firebase',
+                                    ),
+                                    onTap: () => _syncToCloud(context),
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.cloud_download),
+                                    title: const Text('Sync from Cloud'),
+                                    subtitle: const Text(
+                                      'Download latest data from Firebase',
+                                    ),
+                                    onTap: () => _syncFromCloud(context),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                          );
+                        },
+                      ),
+
+                      // Account Section
+                      Consumer<AuthProvider>(
+                        builder: (context, authProvider, _) {
+                          return _SettingsSection(
+                            title: 'Account',
+                            children: [
+                              if (authProvider.isAuthenticated) ...[
+                                ListTile(
+                                  leading: const Icon(Icons.account_circle),
+                                  title: const Text('User Email'),
+                                  subtitle: Text(
+                                    authProvider.currentUser?.email ??
+                                        'Not available',
+                                  ),
+                                ),
+                                const Divider(),
+                                ListTile(
+                                  leading: const Icon(
+                                    Icons.logout,
+                                    color: Colors.red,
+                                  ),
+                                  title: const Text('Sign Out'),
+                                  subtitle: const Text(
+                                    'Sign out from your account',
+                                  ),
+                                  onTap: () =>
+                                      _showSignOutDialog(context, authProvider),
+                                ),
+                              ] else ...[
+                                ListTile(
+                                  leading: const Icon(Icons.login),
+                                  title: const Text('Sign In'),
+                                  subtitle: const Text(
+                                    'Sign in to enable cloud sync',
+                                  ),
+                                  onTap: () => Navigator.of(
+                                    context,
+                                  ).pushNamed('/sign-in'),
+                                ),
+                              ],
+                            ],
+                          );
+                        },
                       ),
 
                       const SizedBox(height: 24),

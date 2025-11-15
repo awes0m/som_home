@@ -14,49 +14,90 @@ class TasksProvider with ChangeNotifier {
   List<Task> get activeTasks => _tasks.where((t) => !t.isCompleted).toList();
   List<Task> get completedTasks => _tasks.where((t) => t.isCompleted).toList();
 
-  void loadTasks() {
-    final box = HiveService.getTasksBox();
-    _tasks = [];
-    for (var key in box.keys) {
-      try {
-        final raw = box.get(key);
-        if (raw is String) {
-          final Map<String, dynamic> json = jsonDecode(raw);
-          _tasks.add(Task.fromJson(json));
+  Future<void> loadTasks() async {
+    if (HiveService.isAuthenticated) {
+      // Try to load from cloud first, fallback to local if empty
+      _tasks = await HiveService.loadTasksFromCloud();
+      if (_tasks.isEmpty) {
+        // Load from local storage
+        final box = HiveService.getTasksBox();
+        _tasks = [];
+        for (var key in box.keys) {
+          try {
+            final raw = box.get(key);
+            if (raw is String) {
+              final Map<String, dynamic> json = jsonDecode(raw);
+              _tasks.add(Task.fromJson(json));
+            }
+          } catch (_) {
+            // Skip invalid entries
+          }
         }
-      } catch (_) {
-        // Skip invalid entries
+        // Sync local data to cloud
+        if (_tasks.isNotEmpty) {
+          await HiveService.syncTasksToCloud(_tasks);
+        }
+      }
+    } else {
+      // Load from Hive
+      final box = HiveService.getTasksBox();
+      _tasks = [];
+      for (var key in box.keys) {
+        try {
+          final raw = box.get(key);
+          if (raw is String) {
+            final Map<String, dynamic> json = jsonDecode(raw);
+            _tasks.add(Task.fromJson(json));
+          }
+        } catch (_) {
+          // Skip invalid entries
+        }
       }
     }
     _tasks.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     notifyListeners();
   }
 
-  void addTask(Task task) {
-    _tasks.add(task);
-    _saveTask(task);
+  void setTasks(List<Task> tasks) {
+    _tasks = tasks;
+    // Save to local storage
+    final box = HiveService.getTasksBox();
+    box.clear();
+    for (var task in tasks) {
+      box.put(task.id, jsonEncode(task.toJson()));
+    }
     notifyListeners();
   }
 
-  void updateTask(Task task) {
+  Future<void> addTask(Task task) async {
+    _tasks.add(task);
+    _saveTask(task);
+    await HiveService.syncTasksToCloud(_tasks);
+    notifyListeners();
+  }
+
+  Future<void> updateTask(Task task) async {
     final index = _tasks.indexWhere((t) => t.id == task.id);
     if (index != -1) {
       _tasks[index] = task;
       _saveTask(task);
+      await HiveService.syncTasksToCloud(_tasks);
       notifyListeners();
     }
   }
 
-  void toggleTask(String id) {
+  Future<void> toggleTask(String id) async {
     final task = _tasks.firstWhere((t) => t.id == id);
     task.isCompleted = !task.isCompleted;
     _saveTask(task);
+    await HiveService.syncTasksToCloud(_tasks);
     notifyListeners();
   }
 
-  void deleteTask(String id) {
+  Future<void> deleteTask(String id) async {
     _tasks.removeWhere((t) => t.id == id);
     HiveService.getTasksBox().delete(id);
+    await HiveService.syncTasksToCloud(_tasks);
     notifyListeners();
   }
 
@@ -64,10 +105,10 @@ class TasksProvider with ChangeNotifier {
     HiveService.getTasksBox().put(task.id, jsonEncode(task.toJson()));
   }
 
-  void deleteCompletedTasks() {
+  Future<void> deleteCompletedTasks() async {
     final completed = completedTasks.map((t) => t.id).toList();
     for (final id in completed) {
-      deleteTask(id);
+      await deleteTask(id);
     }
   }
 
@@ -76,12 +117,12 @@ class TasksProvider with ChangeNotifier {
     return jsonEncode(data);
   }
 
-  void importFromJson(String jsonString) {
+  Future<void> importFromJson(String jsonString) async {
     try {
       final List<dynamic> data = jsonDecode(jsonString);
       for (var item in data) {
         final task = Task.fromJson(item);
-        addTask(task);
+        await addTask(task);
       }
     } catch (_) {
       // Ignore parse errors

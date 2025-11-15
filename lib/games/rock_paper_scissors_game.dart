@@ -12,7 +12,9 @@ class _RockPaperScissorsGameState extends State<RockPaperScissorsGame> {
   String? _playerChoice;
   String? _computerChoice;
   String _result = 'Choose your weapon!';
+  // ignore: unused_field
   int _playerScore = 0;
+  // ignore: unused_field
   int _computerScore = 0;
 
   final List<String> _choices = ['rock', 'paper', 'scissors'];

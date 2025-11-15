@@ -80,7 +80,7 @@ class BackupService {
       if (savedLocation == null) {
         // User likely cancelled the operation.
         return;
-      }      final String message = 'Your configuration download should begin automatically.';
+      }      const String message = 'Your configuration download should begin automatically.';
 
       ConfirmDialog.show(
         context: context,

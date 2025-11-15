@@ -22,7 +22,14 @@ dependencies:
   # Storage
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  shared_preferences: ^2.2.2  # URL Handling
+  shared_preferences: ^2.2.2
+
+  # Firebase
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+  cloud_firestore: ^5.0.0
+
+  # URL Handling
   url_launcher: ^6.2.3
   
   # Game Engine
@@ -33,6 +40,7 @@ dependencies:
   file_picker: ^8.0.0+1
   web: ^1.1.1
   js_interop: ^0.0.1
+  firebase_app_check: ^0.3.2+10
 
 dev_dependencies:
   flutter_test:
