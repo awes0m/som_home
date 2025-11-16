@@ -9,8 +9,10 @@ import 'core/providers/background_provider.dart';
 import 'core/providers/bookmarks_provider.dart';
 import 'core/providers/tasks_provider.dart';
 import 'core/providers/greeting_provider.dart';
-import 'core/providers/auth_provider.dart' ;
+import 'core/providers/auth_provider.dart';
 import 'core/storage/hive_service.dart';
+import 'core/utils/responsive.dart';
+import 'widgets/responsive_navigation.dart';
 import 'pages/homepage.dart';
 import 'pages/bookmarks_page.dart';
 import 'pages/tasks_page.dart';
@@ -106,30 +108,18 @@ class _AuthWrapperState extends State<AuthWrapper> {
       // schedule after build
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Keep your data safe'),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
             content: const Text(
-              'Sign in to backup and sync your bookmarks, tasks and settings across devices.\n\nWould you like to sign in now?',
+              'Sign in to backup and sync your data across devices. Use the account icon in the navigation bar.',
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  settingsBox.put('prompt_signin_shown', true);
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Maybe later'),
-              ),
-              FilledButton(
-                onPressed: () {
-                  settingsBox.put('prompt_signin_shown', true);
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pushNamed('/sign-in');
-                },
-                child: const Text('Sign in'),
-              ),
-            ],
+            action: SnackBarAction(
+              label: 'Dismiss',
+              onPressed: () {
+                settingsBox.put('prompt_signin_shown', true);
+              },
+            ),
+            duration: const Duration(seconds: 8),
           ),
         );
       });
@@ -164,6 +154,34 @@ class _MainNavigationState extends State<MainNavigation> {
   ];
   final _titles = const ['Home', 'Bookmarks', 'Tasks', 'Games', 'Settings'];
 
+  final List<NavigationDestination> _destinations = const [
+    NavigationDestination(
+      icon: Icon(Icons.home_outlined),
+      selectedIcon: Icon(Icons.home),
+      label: 'Home',
+    ),
+    NavigationDestination(
+      icon: Icon(Icons.bookmark_border),
+      selectedIcon: Icon(Icons.bookmark),
+      label: 'Bookmarks',
+    ),
+    NavigationDestination(
+      icon: Icon(Icons.checklist_outlined),
+      selectedIcon: Icon(Icons.checklist),
+      label: 'Tasks',
+    ),
+    NavigationDestination(
+      icon: Icon(Icons.videogame_asset_outlined),
+      selectedIcon: Icon(Icons.videogame_asset),
+      label: 'Games',
+    ),
+    NavigationDestination(
+      icon: Icon(Icons.settings_outlined),
+      selectedIcon: Icon(Icons.settings),
+      label: 'Settings',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final bg = context.watch<BackgroundProvider>();
@@ -171,7 +189,10 @@ class _MainNavigationState extends State<MainNavigation> {
     if (bg.backgroundType == 'url' || bg.backgroundType == 'preset') {
       background = BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage(bg.backgroundUrl ?? ''),
+          image: NetworkImage(
+            bg.backgroundUrl ??
+                'https://images.unsplash.com/photo-1754851342161-083a48d2e075',
+          ),
           fit: BoxFit.cover,
         ),
       );
@@ -199,108 +220,300 @@ class _MainNavigationState extends State<MainNavigation> {
       );
     }
 
+    final isMobile = ResponsiveHelper.isMobile(context);
+
     return Scaffold(
       body: Container(
         decoration: background,
-        child: Column(
-          children: [
-            // Top app bar
-            Container(
-              color: Colors.black.withValues(alpha: 0.3),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: SafeArea(
-                bottom: false,
-                child: Row(
-                  children: [
-                    IconButton(
-                      color: Colors.white,
-                      onPressed: () => setState(() => _index = 0),
-                      icon: const Icon(Icons.home, size: 32),
+        child: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+      ),
+      bottomNavigationBar: isMobile
+          ? ResponsiveNavigation(
+              selectedIndex: _index,
+              onDestinationSelected: (index) => setState(() => _index = index),
+              destinations: _destinations,
+              titles: _titles,
+            )
+          : null,
+    );
+  }
 
-                      tooltip: 'Home',
+  Widget _buildMobileLayout() {
+    return SafeArea(
+      child: Column(
+        children: [
+          // Mobile app bar
+          if (_index != 0) // Don't show app bar on home page for cleaner look
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.surface.withValues(alpha: 0.9),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Text(
+                    _titles[_index],
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      _titles[_index],
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      color: Colors.white,
-                      onPressed: () => setState(() => _index = 0),
-                      icon: const Icon(Icons.search),
-                      tooltip: 'Home',
-                    ),
-                    IconButton(
-                      color: Colors.white,
-                      onPressed: () => setState(() => _index = 1),
-                      icon: const Icon(Icons.bookmark),
-                      tooltip: 'Bookmarks',
-                    ),
-                    IconButton(
-                      color: Colors.white,
-                      onPressed: () => setState(() => _index = 2),
-                      icon: const Icon(Icons.checklist),
-                      tooltip: 'Tasks',
-                    ),
-                    IconButton(
-                      color: Colors.white,
-                      onPressed: () => setState(() => _index = 3),
-                      icon: const Icon(Icons.videogame_asset),
-                      tooltip: 'Games',
-                    ),
-                    IconButton(
-                      color: Colors.white,
-                      onPressed: () => setState(() => _index = 4),
-                      icon: const Icon(Icons.settings),
-                      tooltip: 'Settings',
-                    ),
-                    const SizedBox(width: 8),
-                    // Login / Profile avatar
-                    Consumer<AuthProvider>(
-                      builder: (context, auth, _) {
-                        if (auth.isAuthenticated && auth.currentUser != null) {
-                          final display =
-                              auth.currentUser?.displayName ??
-                              auth.currentUser?.email ??
-                              '';
-                          final initial = display.isNotEmpty
-                              ? display[0].toUpperCase()
-                              : '?';
-                          return GestureDetector(
-                            onTap: () =>
-                                Navigator.of(context).pushNamed('/settings'),
-                            child: CircleAvatar(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.black,
-                              child: Text(initial),
-                            ),
-                          );
-                        } else {
-                          return GestureDetector(
-                            onTap: () =>
-                                Navigator.of(context).pushNamed('/sign-in'),
-                            child: const CircleAvatar(
-                              backgroundColor: Colors.white24,
-                              foregroundColor: Colors.white,
-                              child: Icon(Icons.person),
-                            ),
-                          );
-                        }
-                      },
+                  ),
+                  const Spacer(),
+                  _buildMobileUserAvatar(),
+                ],
+              ),
+            ),
+          Expanded(child: _pages[_index]),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout() {
+    return Row(
+      children: [
+        ResponsiveNavigation(
+          selectedIndex: _index,
+          onDestinationSelected: (index) => setState(() => _index = index),
+          destinations: _destinations,
+          titles: _titles,
+        ),
+        Expanded(
+          child: Column(
+            children: [
+              // Desktop app bar
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.9),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      _titles[_index],
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const Spacer(),
+                    // Desktop user avatar is handled in ResponsiveNavigation
+                  ],
+                ),
               ),
+              Expanded(child: _pages[_index]),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileUserAvatar() {
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        if (auth.isAuthenticated && auth.currentUser != null) {
+          final display =
+              auth.currentUser?.displayName ?? auth.currentUser?.email ?? '';
+          final initial = display.isNotEmpty ? display[0].toUpperCase() : '?';
+
+          return PopupMenuButton<String>(
+            child: CircleAvatar(
+              radius: 16,
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              child: Text(initial, style: const TextStyle(fontSize: 14)),
             ),
-            Expanded(child: _pages[_index]),
+            onSelected: (value) {
+              switch (value) {
+                case 'sync':
+                  _syncData(context);
+                  break;
+                case 'signout':
+                  _signOut(context);
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'sync',
+                child: Row(
+                  children: [
+                    Icon(Icons.sync, size: 20),
+                    SizedBox(width: 8),
+                    Text('Sync Data'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'signout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, size: 20),
+                    SizedBox(width: 8),
+                    Text('Sign Out'),
+                  ],
+                ),
+              ),
+            ],
+          );
+        } else {
+          return Badge(
+            child: IconButton(
+              icon: const Icon(Icons.account_circle),
+              onPressed: () => Navigator.of(context).pushNamed('/sign-in'),
+              tooltip: 'Sign In',
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  void _showInfoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('About Personal Homepage'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'A modern Flutter web application that serves as a personal browser homepage with the following features:',
+              style: TextStyle(fontSize: 14),
+            ),
+            SizedBox(height: 12),
+            Text('• Google Search integration'),
+            Text('• Bookmark management'),
+            Text('• Task tracking'),
+            Text('• Customizable backgrounds'),
+            Text('• Mini-games (Snake, Flappy Bird, etc.)'),
+            Text('• Offline-first functionality'),
+            SizedBox(height: 12),
+            Text(
+              'Built with Flutter and Firebase for cross-device synchronization.',
+              style: TextStyle(fontSize: 14),
+            ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
+  }
+
+  void _showHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Help & Tips'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Getting Started:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text('• Use the navigation icons to switch between pages'),
+            Text('• Click the search icon to access Google Search'),
+            Text('• Tap your profile avatar to access settings'),
+            SizedBox(height: 12),
+            Text(
+              'Sync & Backup:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text('• Sign in to backup your data across devices'),
+            Text('• Use the Sync Data option to manually sync'),
+            Text('• Your bookmarks and tasks are automatically saved locally'),
+            SizedBox(height: 12),
+            Text(
+              'Customization:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text('• Change themes in Settings'),
+            Text('• Set custom backgrounds (URL, local image, or presets)'),
+            Text('• Organize bookmarks into folders'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Got it'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _syncData(BuildContext context) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    if (!authProvider.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to sync your data')),
+      );
+      return;
+    }
+
+    try {
+      await HiveService.mergeLocalAndCloudOnSignIn();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Data synced successfully')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Sync failed: ${e.toString()}')));
+      }
+    }
+  }
+
+  void _signOut(BuildContext context) async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    try {
+      await authProvider.signOut();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Signed out successfully')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sign out failed: ${e.toString()}')),
+        );
+      }
+    }
   }
 }

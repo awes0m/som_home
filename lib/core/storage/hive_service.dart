@@ -174,6 +174,103 @@ class HiveService {
     }
   }
 
+  // Manual sync: merge local and cloud data
+  static Future<void> manualSync() async {
+    final user = _authService.currentUser;
+    if (user == null) return;
+
+    try {
+      final cloudBookmarks = await loadBookmarksFromCloud();
+      final cloudTasks = await loadTasksFromCloud();
+      final cloudSettings = await loadSettingsFromCloud();
+
+      // Load local bookmarks
+      final localBookmarks = <Bookmark>[];
+      final bbox = getBookmarksBox();
+      for (var key in bbox.keys) {
+        try {
+          final raw = bbox.get(key);
+          if (raw is String && raw.isNotEmpty) {
+            final Map<String, dynamic> json =
+                jsonDecode(raw) as Map<String, dynamic>;
+            localBookmarks.add(Bookmark.fromJson(json));
+          }
+        } catch (_) {
+          // ignore malformed entries
+        }
+      }
+
+      // Load local tasks
+      final localTasks = <Task>[];
+      final tbox = getTasksBox();
+      for (var key in tbox.keys) {
+        try {
+          final raw = tbox.get(key);
+          if (raw is String && raw.isNotEmpty) {
+            final Map<String, dynamic> json =
+                jsonDecode(raw) as Map<String, dynamic>;
+            localTasks.add(Task.fromJson(json));
+          }
+        } catch (_) {
+          // ignore malformed entries
+        }
+      }
+
+      // Load local settings
+      final localSettings = <String, dynamic>{};
+      final sbox = getSettingsBox();
+      for (var key in sbox.keys) {
+        localSettings[key] = sbox.get(key);
+      }
+
+      // Merge bookmarks: prefer cloud on conflicts
+      final Map<String, Bookmark> mergedBookmarks = {};
+      for (var bm in localBookmarks) {
+        mergedBookmarks[bm.id] = bm;
+      }
+      for (var bm in cloudBookmarks) {
+        mergedBookmarks[bm.id] = bm;
+      }
+
+      // Merge tasks: prefer cloud on conflicts
+      final Map<String, Task> mergedTasks = {};
+      for (var t in localTasks) {
+        mergedTasks[t.id] = t;
+      }
+      for (var t in cloudTasks) {
+        mergedTasks[t.id] = t;
+      }
+
+      // Merge settings: prefer cloud on conflicts
+      final mergedSettings = <String, dynamic>{};
+      mergedSettings.addAll(localSettings);
+      mergedSettings.addAll(cloudSettings);
+
+      // Persist merged data locally
+      await bbox.clear();
+      for (var bm in mergedBookmarks.values) {
+        bbox.put(bm.id, jsonEncode(bm.toJson()));
+      }
+
+      await tbox.clear();
+      for (var t in mergedTasks.values) {
+        tbox.put(t.id, jsonEncode(t.toJson()));
+      }
+
+      await sbox.clear();
+      for (var entry in mergedSettings.entries) {
+        sbox.put(entry.key, entry.value);
+      }
+
+      // Sync merged data back to cloud
+      await syncBookmarksToCloud(mergedBookmarks.values.toList());
+      await syncTasksToCloud(mergedTasks.values.toList());
+      await syncSettingsToCloud(mergedSettings);
+    } catch (e) {
+      // Silently fail; sync is best-effort
+    }
+  }
+
   // Check if user is authenticated
   static bool get isAuthenticated => _authService.currentUser != null;
 

@@ -10,6 +10,7 @@ import '../core/providers/greeting_provider.dart';
 import '../core/providers/auth_provider.dart';
 import '../core/storage/hive_service.dart';
 import '../core/storage/backup_service.dart';
+import '../core/utils/responsive.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -56,7 +57,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   final List<String> defaultWallpapers = [
-    'https://images.unsplash.com/photo-1519681393784-d120267933ba',
+    'https://raw.githubusercontent.com/awes0m/fortpolio/refs/heads/main/artworks/DurgaSketch.jpg',
+    'https://images.unsplash.com/photo-1761787769976-105d25e9d160',
+    'https://images.unsplash.com/photo-1754851342161-083a48d2e075',
+    'https://images.unsplash.com/photo-1468657988500-aca2be09f4c6',
     'https://images.unsplash.com/photo-1506905925346-21bda4d32df4',
     'https://images.unsplash.com/photo-1501594907352-04cda38ebc29',
     'https://images.unsplash.com/photo-1441974231531-c6227db76b6e',
@@ -326,37 +330,42 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Column(
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black.withValues(alpha: 0.3)
-                  : Colors.white.withValues(alpha: 0.7),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'Settings',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // // Header
+          // Container(
+          //   padding: ResponsiveHelper.getResponsivePadding(context),
+          //   decoration: BoxDecoration(
+          //     color: Theme.of(context).brightness == Brightness.dark
+          //         ? Colors.black.withValues(alpha: 0.3)
+          //         : Colors.white.withValues(alpha: 0.7),
+          //   ),
+          //   child: Row(
+          //     children: [
+          //       Text(
+          //         'Settings',
+          //         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+          //           fontWeight: FontWeight.bold,
+          //           fontSize: ResponsiveHelper.getResponsiveFontSize(context, isMobile ? 28 : 32),
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
 
           // Settings Content
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
+              padding: ResponsiveHelper.getResponsivePadding(context),
               child: Center(
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 800),
+                  constraints: BoxConstraints(
+                    maxWidth: ResponsiveHelper.getMaxContentWidth(context),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -365,86 +374,296 @@ class _SettingsPageState extends State<SettingsPage> {
                         title: 'Greeting',
                         children: [
                           Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: ResponsiveHelper.getResponsiveSpacing(
+                                context,
+                                16,
+                              ),
+                              vertical: ResponsiveHelper.getResponsiveSpacing(
+                                context,
+                                8,
+                              ),
                             ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _nameController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Display Name',
-                                      hintText: 'Enter your name',
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                FilledButton(
-                                  onPressed: () {
-                                    final name = _nameController.text.trim();
-                                    Provider.of<GreetingProvider>(
-                                      context,
-                                      listen: false,
-                                    ).setDisplayName(name);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Greeting name updated'),
+                            child: isMobile
+                                ?
+                                  // Mobile - vertical layout
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      TextField(
+                                        controller: _nameController,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Display Name',
+                                          hintText: 'Enter your name',
+                                        ),
                                       ),
-                                    );
-                                  },
-                                  child: const Text('Save'),
-                                ),
-                              ],
-                            ),
+                                      SizedBox(
+                                        height:
+                                            ResponsiveHelper.getResponsiveSpacing(
+                                              context,
+                                              12,
+                                            ),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () {
+                                          final name = _nameController.text
+                                              .trim();
+                                          Provider.of<GreetingProvider>(
+                                            context,
+                                            listen: false,
+                                          ).setDisplayName(name);
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Greeting name updated',
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: const Text('Save'),
+                                      ),
+                                    ],
+                                  )
+                                :
+                                  // Desktop - horizontal layout
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextField(
+                                          controller: _nameController,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Display Name',
+                                            hintText: 'Enter your name',
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      FilledButton(
+                                        onPressed: () {
+                                          final name = _nameController.text
+                                              .trim();
+                                          Provider.of<GreetingProvider>(
+                                            context,
+                                            listen: false,
+                                          ).setDisplayName(name);
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Greeting name updated',
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: const Text('Save'),
+                                      ),
+                                    ],
+                                  ),
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 24),
-
-                      // Theme Settings
+                      SizedBox(
+                        height: ResponsiveHelper.getResponsiveSpacing(
+                          context,
+                          24,
+                        ),
+                      ), // Theme Settings
                       _SettingsSection(
                         title: 'Appearance',
                         children: [
                           Consumer<ThemeProvider>(
                             builder: (context, themeProvider, _) {
-                              return ListTile(
-                                title: const Text('Theme Mode'),
-                                subtitle: const Text(
-                                  'Choose light, dark, or system theme',
-                                ),
-                                trailing: SegmentedButton<ThemeMode>(
-                                  segments: const [
-                                    ButtonSegment(
-                                      value: ThemeMode.light,
-                                      icon: Icon(Icons.light_mode),
-                                    ),
-                                    ButtonSegment(
-                                      value: ThemeMode.dark,
-                                      icon: Icon(Icons.dark_mode),
-                                    ),
-                                    ButtonSegment(
-                                      value: ThemeMode.system,
-                                      icon: Icon(Icons.settings_suggest),
-                                    ),
-                                  ],
-                                  selected: {themeProvider.themeMode},
-                                  onSelectionChanged:
-                                      (Set<ThemeMode> newSelection) {
-                                        themeProvider.setThemeMode(
-                                          newSelection.first,
-                                        );
-                                      },
-                                ),
-                              );
+                              return isMobile
+                                  ?
+                                    // Mobile - vertical layout for theme selector
+                                    Padding(
+                                      padding: EdgeInsets.all(
+                                        ResponsiveHelper.getResponsiveSpacing(
+                                          context,
+                                          16,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Theme Mode',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium
+                                                ?.copyWith(
+                                                  fontSize:
+                                                      ResponsiveHelper.getResponsiveFontSize(
+                                                        context,
+                                                        16,
+                                                      ),
+                                                ),
+                                          ),
+                                          SizedBox(
+                                            height:
+                                                ResponsiveHelper.getResponsiveSpacing(
+                                                  context,
+                                                  8,
+                                                ),
+                                          ),
+                                          Text(
+                                            'Choose light, dark, or system theme',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
+                                                  fontSize:
+                                                      ResponsiveHelper.getResponsiveFontSize(
+                                                        context,
+                                                        14,
+                                                      ),
+                                                  color: Theme.of(
+                                                    context,
+                                                  ).textTheme.bodySmall?.color,
+                                                ),
+                                          ),
+                                          SizedBox(
+                                            height:
+                                                ResponsiveHelper.getResponsiveSpacing(
+                                                  context,
+                                                  12,
+                                                ),
+                                          ),
+                                          SizedBox(
+                                            width: double.infinity,
+                                            child: SegmentedButton<ThemeMode>(
+                                              segments: [
+                                                ButtonSegment(
+                                                  value: ThemeMode.light,
+                                                  icon: Icon(
+                                                    Icons.light_mode,
+                                                    size:
+                                                        ResponsiveHelper.isMobile(
+                                                          context,
+                                                        )
+                                                        ? 18
+                                                        : 20,
+                                                  ),
+                                                  label: Text(
+                                                    'Light',
+                                                    style: TextStyle(
+                                                      fontSize:
+                                                          ResponsiveHelper.getResponsiveFontSize(
+                                                            context,
+                                                            12,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                ButtonSegment(
+                                                  value: ThemeMode.dark,
+                                                  icon: Icon(
+                                                    Icons.dark_mode,
+                                                    size:
+                                                        ResponsiveHelper.isMobile(
+                                                          context,
+                                                        )
+                                                        ? 18
+                                                        : 20,
+                                                  ),
+                                                  label: Text(
+                                                    'Dark',
+                                                    style: TextStyle(
+                                                      fontSize:
+                                                          ResponsiveHelper.getResponsiveFontSize(
+                                                            context,
+                                                            12,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                ButtonSegment(
+                                                  value: ThemeMode.system,
+                                                  icon: Icon(
+                                                    Icons.settings_suggest,
+                                                    size:
+                                                        ResponsiveHelper.isMobile(
+                                                          context,
+                                                        )
+                                                        ? 18
+                                                        : 20,
+                                                  ),
+                                                  label: Text(
+                                                    'System',
+                                                    style: TextStyle(
+                                                      fontSize:
+                                                          ResponsiveHelper.getResponsiveFontSize(
+                                                            context,
+                                                            12,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                              selected: {
+                                                themeProvider.themeMode,
+                                              },
+                                              onSelectionChanged:
+                                                  (
+                                                    Set<ThemeMode> newSelection,
+                                                  ) {
+                                                    themeProvider.setThemeMode(
+                                                      newSelection.first,
+                                                    );
+                                                  },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  :
+                                    // Desktop - horizontal layout
+                                    ListTile(
+                                      title: const Text('Theme Mode'),
+                                      subtitle: const Text(
+                                        'Choose light, dark, or system theme',
+                                      ),
+                                      trailing: SegmentedButton<ThemeMode>(
+                                        segments: const [
+                                          ButtonSegment(
+                                            value: ThemeMode.light,
+                                            icon: Icon(Icons.light_mode),
+                                          ),
+                                          ButtonSegment(
+                                            value: ThemeMode.dark,
+                                            icon: Icon(Icons.dark_mode),
+                                          ),
+                                          ButtonSegment(
+                                            value: ThemeMode.system,
+                                            icon: Icon(Icons.settings_suggest),
+                                          ),
+                                        ],
+                                        selected: {themeProvider.themeMode},
+                                        onSelectionChanged:
+                                            (Set<ThemeMode> newSelection) {
+                                              themeProvider.setThemeMode(
+                                                newSelection.first,
+                                              );
+                                            },
+                                      ),
+                                    );
                             },
                           ),
                         ],
                       ),
 
-                      const SizedBox(height: 24),
+                      SizedBox(
+                        height: ResponsiveHelper.getResponsiveSpacing(
+                          context,
+                          24,
+                        ),
+                      ),
 
                       // Background Settings
                       _SettingsSection(
@@ -490,10 +709,18 @@ class _SettingsPageState extends State<SettingsPage> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 4,
-                                  crossAxisSpacing: 12,
-                                  mainAxisSpacing: 12,
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: isMobile ? 2 : 4,
+                                  crossAxisSpacing:
+                                      ResponsiveHelper.getResponsiveSpacing(
+                                        context,
+                                        12,
+                                      ),
+                                  mainAxisSpacing:
+                                      ResponsiveHelper.getResponsiveSpacing(
+                                        context,
+                                        12,
+                                      ),
                                 ),
                             itemCount: defaultWallpapers.length,
                             itemBuilder: (context, index) {
@@ -526,7 +753,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ),
 
-                      const SizedBox(height: 24),
+                      SizedBox(
+                        height: ResponsiveHelper.getResponsiveSpacing(
+                          context,
+                          24,
+                        ),
+                      ),
 
                       // Data Management
                       _SettingsSection(
@@ -663,7 +895,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         ],
                       ),
 
-                      const SizedBox(height: 24),
+                      SizedBox(
+                        height: ResponsiveHelper.getResponsiveSpacing(
+                          context,
+                          24,
+                        ),
+                      ),
 
                       // Cloud Sync Section
                       Consumer<AuthProvider>(
@@ -695,7 +932,12 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 24),
+                              SizedBox(
+                                height: ResponsiveHelper.getResponsiveSpacing(
+                                  context,
+                                  24,
+                                ),
+                              ),
                             ],
                           );
                         },
@@ -746,7 +988,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         },
                       ),
 
-                      const SizedBox(height: 24),
+                      SizedBox(
+                        height: ResponsiveHelper.getResponsiveSpacing(
+                          context,
+                          24,
+                        ),
+                      ),
 
                       // About
                       const _SettingsSection(
@@ -794,17 +1041,25 @@ class _SettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(
+              ResponsiveHelper.getResponsiveSpacing(context, 16),
+            ),
             child: Text(
               title,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: ResponsiveHelper.getResponsiveFontSize(
+                  context,
+                  isMobile ? 18 : 20,
+                ),
+              ),
             ),
           ),
           const Divider(height: 1),

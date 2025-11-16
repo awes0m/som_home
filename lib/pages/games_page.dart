@@ -4,6 +4,7 @@ import '../games/rock_paper_scissors_game.dart';
 import '../games/tic_tac_toe_game.dart';
 import '../games/_2048_game.dart';
 import '../games/snake_game.dart';
+import '../core/utils/responsive.dart';
 
 class GamesPage extends StatefulWidget {
   const GamesPage({super.key});
@@ -20,21 +21,21 @@ class _GamesPageState extends State<GamesPage> {
       id: 'snake',
       title: 'Snake',
       description: 'Classic snake game - eat the food and grow!',
-      icon: Icons.grid_4x4,
+      icon: Icons.games_outlined,
       color: Colors.green,
     ),
     GameInfo(
       id: 'rps',
-      title: 'Rock Paper Scissors',
-      description: 'Play against the computer and test your luck!',
-      icon: Icons.sports_martial_arts,
+      title: 'Rock Paper ✂️',
+      description: 'Test your luck against the computer!',
+      icon: Icons.sports_mma,
       color: Colors.blue,
     ),
     GameInfo(
       id: '2048',
       title: '2048',
       description: 'Combine tiles to reach the 2048 tile!',
-      icon: Icons.insert_chart,
+      icon: Icons.filter_2,
       color: Colors.teal,
     ),
     GameInfo(
@@ -72,22 +73,32 @@ class _GamesPageState extends State<GamesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+
     if (_selectedGame != null) {
       return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.black.withValues(alpha: 0.3),
-          title: Text(_games.firstWhere((g) => g.id == _selectedGame).title),
+          title: Text(
+            _games.firstWhere((g) => g.id == _selectedGame).title,
+            style: TextStyle(
+              fontSize: ResponsiveHelper.getResponsiveFontSize(
+                context,
+                isMobile ? 18 : 20,
+              ),
+            ),
+          ),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: Icon(Icons.arrow_back, size: isMobile ? 20 : 24),
             onPressed: () => setState(() => _selectedGame = null),
           ),
         ),
         body: LayoutBuilder(
           builder: (context, constraints) {
-            final double maxContentWidth = constraints.maxWidth > 900
-                ? 900
-                : constraints.maxWidth;
+            final double maxContentWidth = ResponsiveHelper.getMaxContentWidth(
+              context,
+            );
             final Color surfaceColor =
                 Theme.of(context).brightness == Brightness.dark
                 ? Colors.black.withValues(alpha: 0.3)
@@ -101,7 +112,7 @@ class _GamesPageState extends State<GamesPage> {
                 child: Align(
                   alignment: Alignment.topCenter,
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
+                    padding: ResponsiveHelper.getResponsivePadding(context),
                     child: Align(
                       alignment: Alignment.topCenter,
                       child: ConstrainedBox(
@@ -122,35 +133,45 @@ class _GamesPageState extends State<GamesPage> {
       backgroundColor: Colors.transparent,
       body: Column(
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.black.withValues(alpha: 0.3)
-                  : Colors.white.withValues(alpha: 0.7),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'Games',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // // Header
+          // Container(
+          //   padding: ResponsiveHelper.getResponsivePadding(context),
+          //   decoration: BoxDecoration(
+          //     color: Theme.of(context).brightness == Brightness.dark
+          //         ? Colors.black.withValues(alpha: 0.3)
+          //         : Colors.white.withValues(alpha: 0.7),
+          //   ),
+          //   child: Row(
+          //     children: [
+          //       Text(
+          //         'Games',
+          //         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+          //           fontWeight: FontWeight.bold,
+          //           fontSize: ResponsiveHelper.getResponsiveFontSize(
+          //             context,
+          //             isMobile ? 28 : 32,
+          //           ),
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
 
           // Games Grid
           Expanded(
             child: GridView.builder(
-              padding: const EdgeInsets.all(24),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 300,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 6 / 7.5,
+              padding: ResponsiveHelper.getResponsivePadding(context),
+              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: isMobile ? 200 : 300,
+                crossAxisSpacing: ResponsiveHelper.getResponsiveSpacing(
+                  context,
+                  16,
+                ),
+                mainAxisSpacing: ResponsiveHelper.getResponsiveSpacing(
+                  context,
+                  16,
+                ),
+                childAspectRatio: isMobile ? 0.85 : 0.8,
               ),
               itemCount: _games.length,
               itemBuilder: (context, index) {
@@ -192,6 +213,8 @@ class _GameCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = ResponsiveHelper.isMobile(context);
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -208,25 +231,37 @@ class _GameCard extends StatelessWidget {
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(isMobile ? 16 : 24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(game.icon, size: 64, color: Colors.white),
-                const SizedBox(height: 16),
+                Icon(game.icon, size: isMobile ? 48 : 64, color: Colors.white),
+                SizedBox(
+                  height: ResponsiveHelper.getResponsiveSpacing(context, 16),
+                ),
                 Text(
                   game.title,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(
+                      context,
+                      isMobile ? 16 : 20,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(
+                  height: ResponsiveHelper.getResponsiveSpacing(context, 8),
+                ),
                 Text(
                   game.description,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(
+                      context,
+                      isMobile ? 12 : 14,
+                    ),
                   ),
                 ),
               ],

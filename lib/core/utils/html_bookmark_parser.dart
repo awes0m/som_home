@@ -5,59 +5,62 @@ import '../models/models.dart';
 class HtmlBookmarkParser {
   static List<Bookmark> parseHtmlBookmarks(String htmlContent) {
     final List<Bookmark> bookmarks = [];
-    
+
     try {
       final document = html_parser.parse(htmlContent);
-      
+
       // Find all bookmark links and folders
       _parseBookmarkNode(document.body, bookmarks, null);
-      
+
     } catch (e) {
       // If parsing fails, return empty list
       // Error parsing HTML bookmarks: $e
     }
-    
+
     return bookmarks;
   }
-  
-  static void _parseBookmarkNode(Element? node, List<Bookmark> bookmarks, String? currentFolder) {
+
+  static void _parseBookmarkNode(Element? node, List<Bookmark> bookmarks, String? currentFolderPath) {
     if (node == null) return;
-    
+
     for (final child in node.children) {
       if (child.localName == 'dt') {
         // Check if this is a folder (H3 tag) or bookmark (A tag)
         final h3 = child.querySelector('h3');
         final anchor = child.querySelector('a');
-        
+
         if (h3 != null) {
           // This is a folder
           final folderName = h3.text.trim();
+          final fullFolderPath = currentFolderPath != null
+              ? '$currentFolderPath/$folderName'
+              : folderName;
           final nextSibling = _getNextSibling(child);
-          
+
           if (nextSibling?.localName == 'dl') {
             // Parse bookmarks within this folder
-            _parseBookmarkNode(nextSibling, bookmarks, folderName);
+            _parseBookmarkNode(nextSibling, bookmarks, fullFolderPath);
           }
         } else if (anchor != null) {
           // This is a bookmark
           final url = anchor.attributes['href'];
           final title = anchor.text.trim();
-          
+
           if (url != null && url.isNotEmpty && title.isNotEmpty) {
             final bookmark = Bookmark(
               title: title,
               url: url,
-              folder: currentFolder,
+              folder: currentFolderPath,
             );
             bookmarks.add(bookmark);
           }
         }
       } else if (child.localName == 'dl') {
         // Continue parsing within description list
-        _parseBookmarkNode(child, bookmarks, currentFolder);
+        _parseBookmarkNode(child, bookmarks, currentFolderPath);
       } else {
         // Recursively check other elements
-        _parseBookmarkNode(child, bookmarks, currentFolder);
+        _parseBookmarkNode(child, bookmarks, currentFolderPath);
       }
     }
   }
