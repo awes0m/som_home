@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../games/memory_match_game.dart';
 import '../games/rock_paper_scissors_game.dart';
 import '../games/tic_tac_toe_game.dart';
@@ -51,6 +52,30 @@ class _GamesPageState extends State<GamesPage> {
       description: 'Find matching pairs of cards',
       icon: Icons.casino,
       color: Colors.orange,
+    ),
+    GameInfo(
+      id: 'https://awes0m.github.io/tpdgame/',
+      isLink: true,
+      title: 'Prisoner\'s Dilemma',
+      description: 'The classic prisoner\'s dilemma',
+      icon: Icons.balance,
+      color: Colors.blueAccent,
+    ),
+    GameInfo(
+      id: 'https://awes0m.github.io/jsTgames/slider_game_flutter/#/',
+      isLink: true,
+      title: 'Slider',
+      description: 'Slide the tiles to arrange them in order',
+      icon: Icons.view_column,
+      color: Colors.blueAccent,
+    ),
+    GameInfo(
+      id: 'https://awes0m.github.io/jsTgames/',
+      isLink: true,
+      title: 'More Games',
+      description: 'More games available online',
+      icon: Icons.more,
+      color: Colors.blueAccent,
     ),
   ];
 
@@ -178,6 +203,7 @@ class _GamesPageState extends State<GamesPage> {
                 final game = _games[index];
                 return _GameCard(
                   game: game,
+                  isLink: game.isLink,
                   onTap: () => setState(() => _selectedGame = game.id),
                 );
               },
@@ -195,21 +221,27 @@ class GameInfo {
   final String description;
   final IconData icon;
   final Color color;
-
+  final bool isLink;
   GameInfo({
     required this.id,
     required this.title,
     required this.description,
     required this.icon,
     required this.color,
+    this.isLink = false,
   });
 }
 
 class _GameCard extends StatelessWidget {
   final GameInfo game;
   final VoidCallback onTap;
+  final bool isLink;
 
-  const _GameCard({required this.game, required this.onTap});
+  const _GameCard({
+    required this.game,
+    required this.onTap,
+    this.isLink = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -218,7 +250,7 @@ class _GameCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: onTap,
+        onTap: (isLink) ? () => launchUrl(Uri.parse(game.id)) : onTap,
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
