@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'dart:html' as html;
+import 'package:web/web.dart' as web;
 import '../core/providers/theme_provider.dart';
 import '../core/providers/background_provider.dart';
 import '../core/providers/bookmarks_provider.dart';
@@ -23,18 +23,28 @@ class _SettingsPageState extends State<SettingsPage> {
   final TextEditingController _urlController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   BackupService? _backupService;
+  bool _isInit = true;
 
   @override
-  void initState() {
-    super.initState();
-    _initBackupService();
-    Future.delayed(Duration.zero, () {
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Check if this is the first time running
+    if (_isInit) {
       final greetingProvider = Provider.of<GreetingProvider>(
         context,
         listen: false,
       );
       _nameController.text = greetingProvider.displayName;
-    });
+      _isInit = false; // Ensure this only runs once
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initBackupService();
+    // No Future.delayed needed here anymore!
   }
 
   Future<void> _initBackupService() async {
@@ -105,17 +115,17 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _pickLocalImage() async {
     try {
       // Web-only image upload using HTML input element
-      final html.FileUploadInputElement uploadInput =
-          html.FileUploadInputElement();
-      uploadInput.accept = 'image/*';
+      final uploadInput = web.HTMLInputElement()
+        ..type = 'file'
+        ..accept = 'image/*';
       uploadInput.click();
 
       uploadInput.onChange.listen((e) async {
         final files = uploadInput.files;
-        if (files!.isEmpty) return;
+        if (files == null || files.length == 0) return;
 
-        final file = files[0];
-        final reader = html.FileReader();
+        final file = files.item(0)!;
+        final reader = web.FileReader();
 
         reader.onLoadEnd.listen((e) async {
           try {
@@ -135,7 +145,7 @@ class _SettingsPageState extends State<SettingsPage> {
           }
         });
 
-        reader.readAsDataUrl(file);
+        reader.readAsDataURL(file);
       });
     } catch (e) {
       if (mounted) {

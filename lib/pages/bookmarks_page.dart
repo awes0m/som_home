@@ -21,6 +21,8 @@ class _BookmarksPageState extends State<BookmarksPage> {
   final _searchController = TextEditingController();
 
   void _showImportDialog() async {
+    final provider = Provider.of<BookmarksProvider>(context, listen: false);
+
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -32,8 +34,6 @@ class _BookmarksPageState extends State<BookmarksPage> {
         final bytes = result.files.single.bytes!;
         final content = utf8.decode(bytes);
         final fileName = result.files.single.name.toLowerCase();
-
-        final provider = Provider.of<BookmarksProvider>(context, listen: false);
 
         if (fileName.endsWith('.html')) {
           provider.importFromHtml(content);

@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,6 +12,7 @@ import 'core/providers/bookmarks_provider.dart';
 import 'core/providers/tasks_provider.dart';
 import 'core/providers/greeting_provider.dart';
 import 'core/providers/auth_provider.dart';
+import 'core/providers/webview_provider.dart';
 import 'core/storage/hive_service.dart';
 import 'core/utils/responsive.dart';
 import 'widgets/responsive_navigation.dart';
@@ -21,6 +24,7 @@ import 'pages/settings_page.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/sign_up_page.dart';
 import 'pages/forgot_password_page.dart';
+import 'pages/webview_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,6 +53,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BookmarksProvider()),
         ChangeNotifierProvider(create: (_) => TasksProvider()),
         ChangeNotifierProvider(create: (_) => GreetingProvider()),
+        ChangeNotifierProvider(create: (_) => WebViewProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, theme, _) {
@@ -145,42 +150,103 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _index = 0;
-  final _pages = const [
-    HomePage(),
-    BookmarksPage(),
-    TasksPage(),
-    GamesPage(),
-    SettingsPage(),
-  ];
-  final _titles = const ['Home', 'Bookmarks', 'Tasks', 'Games', 'Settings'];
 
-  final List<NavigationDestination> _destinations = const [
-    NavigationDestination(
-      icon: Icon(Icons.home_outlined),
-      selectedIcon: Icon(Icons.home),
-      label: 'Home',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.bookmark_border),
-      selectedIcon: Icon(Icons.bookmark),
-      label: 'Bookmarks',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.checklist_outlined),
-      selectedIcon: Icon(Icons.checklist),
-      label: 'Tasks',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.videogame_asset_outlined),
-      selectedIcon: Icon(Icons.videogame_asset),
-      label: 'Games',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.settings_outlined),
-      selectedIcon: Icon(Icons.settings),
-      label: 'Settings',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Set up callback for automatic navigation to webview tab
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+      webViewProvider.setOnTabOpenedCallback((tabIndex) {
+        setState(() {
+          _index = tabIndex;
+        });
+      });
+    });
+  }
+  
+  List<Widget> get _pages {
+    final webViewProvider = context.watch<WebViewProvider>();
+    const basePages = [
+      HomePage(),
+      BookmarksPage(),
+      TasksPage(),
+      GamesPage(),
+      SettingsPage(),
+    ];
+    
+    if (webViewProvider.hasOpenTabs) {
+      return [
+        ...basePages.take(1), // Home
+        const WebViewPage(), // Insert WebView after Home
+        ...basePages.skip(1), // Rest of the pages
+      ];
+    }
+    
+    return basePages;
+  }
+  
+  List<String> get _titles {
+    final webViewProvider = context.watch<WebViewProvider>();
+    const baseTitles = ['Home', 'Bookmarks', 'Tasks', 'Games', 'Settings'];
+    
+    if (webViewProvider.hasOpenTabs) {
+      final currentTab = webViewProvider.currentTab;
+      final webViewTitle = currentTab?.title ?? 'Browser';
+      return [
+        ...baseTitles.take(1), // Home
+        webViewTitle, // WebView title
+        ...baseTitles.skip(1), // Rest of the titles
+      ];
+    }
+    
+    return baseTitles;
+  }
+
+  List<NavigationDestination> get _destinations {
+    final webViewProvider = context.watch<WebViewProvider>();
+    const baseDestinations = [
+      NavigationDestination(
+        icon: Icon(Icons.home_outlined),
+        selectedIcon: Icon(Icons.home),
+        label: 'Home',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.bookmark_border),
+        selectedIcon: Icon(Icons.bookmark),
+        label: 'Bookmarks',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.checklist_outlined),
+        selectedIcon: Icon(Icons.checklist),
+        label: 'Tasks',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.videogame_asset_outlined),
+        selectedIcon: Icon(Icons.videogame_asset),
+        label: 'Games',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.settings_outlined),
+        selectedIcon: Icon(Icons.settings),
+        label: 'Settings',
+      ),
+    ];
+    
+    if (webViewProvider.hasOpenTabs) {
+      return [
+        ...baseDestinations.take(1), // Home
+        const NavigationDestination(
+          icon: Icon(Icons.web_outlined),
+          selectedIcon: Icon(Icons.web),
+          label: 'Browser',
+        ), // WebView destination
+        ...baseDestinations.skip(1), // Rest of the destinations
+      ];
+    }
+    
+    return baseDestinations;
+  }
 
   @override
   Widget build(BuildContext context) {

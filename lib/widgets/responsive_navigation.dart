@@ -250,15 +250,24 @@ class ResponsiveNavigation extends StatelessWidget {
 
   Future<void> _syncData(BuildContext context) async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
+
+    // 1. Capture the messenger immediately.
+    // This looks up the widget tree NOW, while it's safe.
+    final messenger = ScaffoldMessenger.of(context);
+
     if (auth.isAuthenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('Syncing data...'),
           duration: Duration(seconds: 2),
         ),
       );
+
       await HiveService.manualSync();
-      ScaffoldMessenger.of(context).showSnackBar(
+
+      // 2. Use the 'messenger' variable.
+      // This does NOT require 'context' or 'mounted', so it won't crash.
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('Sync completed'),
           duration: Duration(seconds: 2),

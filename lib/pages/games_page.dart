@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart';
 import '../games/memory_match_game.dart';
 import '../games/rock_paper_scissors_game.dart';
 import '../games/tic_tac_toe_game.dart';
 import '../games/_2048_game.dart';
 import '../games/snake_game.dart';
 import '../core/utils/responsive.dart';
+import '../core/providers/webview_provider.dart';
 
 class GamesPage extends StatefulWidget {
   const GamesPage({super.key});
@@ -250,7 +251,10 @@ class _GameCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: (isLink) ? () => launchUrl(Uri.parse(game.id)) : onTap,
+        onTap: (isLink) ? () {
+          final webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+          webViewProvider.openUrl(game.id, title: game.title);
+        } : onTap,
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
