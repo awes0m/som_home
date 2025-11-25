@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:som_home/pages/tools_page.dart';
 
 import 'firebase_options.dart';
 import 'core/providers/theme_provider.dart';
@@ -172,6 +173,7 @@ class _MainNavigationState extends State<MainNavigation> {
       BookmarksPage(),
       TasksPage(),
       GamesPage(),
+      ToolsPage(),
       SettingsPage(),
     ];
     
@@ -188,7 +190,7 @@ class _MainNavigationState extends State<MainNavigation> {
   
   List<String> get _titles {
     final webViewProvider = context.watch<WebViewProvider>();
-    const baseTitles = ['Home', 'Bookmarks', 'Tasks', 'Games', 'Settings'];
+    const baseTitles = ['Home', 'Bookmarks', 'Tasks', 'Games', 'Tools','Settings'];
     
     if (webViewProvider.hasOpenTabs) {
       final currentTab = webViewProvider.currentTab;
@@ -225,6 +227,11 @@ class _MainNavigationState extends State<MainNavigation> {
         icon: Icon(Icons.videogame_asset_outlined),
         selectedIcon: Icon(Icons.videogame_asset),
         label: 'Games',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.build_outlined),
+        selectedIcon: Icon(Icons.build),
+        label: 'Tools',
       ),
       NavigationDestination(
         icon: Icon(Icons.settings_outlined),

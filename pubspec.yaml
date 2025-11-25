@@ -52,10 +52,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  
-  assets:
-    - assets/images/
-    - assets/wallpapers/
+
 
   # To add assets to your application, add an assets section, like this:
   # assets:
