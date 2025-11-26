@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/utils/responsive.dart';
 import '../core/providers/webview_provider.dart';
 
@@ -20,13 +21,15 @@ class _ToolsPageState extends State<ToolsPage> {
       description: 'Track your expenses and manage your budget!',
       icon: Icons.money,
       color: Colors.teal,
+      isWebview: false,
     ),
     ToolInfo(
       id: 'https://awes0m.github.io/numero_uno/',
       title: 'Numero Uno',
       description: 'Discover your destiny hidden in numbers!',
       icon: Icons.numbers_outlined,
-      color: Colors.indigoAccent,
+      color: Colors.deepOrange,
+      isWebview: true,
     ),
     ToolInfo(
       id: 'https://awes0m.github.io/fluttering_drums/',
@@ -35,21 +38,40 @@ class _ToolsPageState extends State<ToolsPage> {
           ' An interactive web application that replicates the functionality of a digital drum machine',
       icon: Icons.music_note,
       color: Colors.blue,
+      isWebview: false,
     ),
 
     ToolInfo(
-      id: 'https://awes0m.github.io/cybersec_tools/',
-      title: 'Json Formatter and Cybersec Tools',
+      id: 'https://awes0m.github.io/cybersec_tools/smartJsonFormatterAnalyzer.html',
+      title: 'Smart Json Formatter',
+      description: 'Format JSON data and access various cybersecurity tools',
+      icon: Icons.javascript_rounded,
+      color: Colors.purple,
+      isWebview: true,
+    ),
+    ToolInfo(
+      id: 'https://awes0m.github.io/cybersec_tools/jsonCorelatorAnalyzer.html',
+      title: 'Json Analyzer HQ',
+      description: 'Format JSON data and access various cybersecurity tools',
+      icon: Icons.cabin,
+      color: Colors.lightGreen,
+      isWebview: false,
+    ),
+    ToolInfo(
+      id: 'https://awes0m.github.io/cybersec_tools/json_multi_corelator.html',
+      title: 'Multi Json Corelator',
       description: 'Format JSON data and access various cybersecurity tools',
       icon: Icons.currency_bitcoin_rounded,
-      color: Colors.purple,
+      color: Colors.lightGreen,
+      isWebview: false,
     ),
     ToolInfo(
       id: 'https://awes0m.github.io/fortpolio/',
       title: 'More Tools',
       description: 'Explore additional web tools and utilities!',
-      icon: Icons.casino,
-      color: Colors.orange,
+      icon: Icons.more_horiz,
+      color: Colors.blue,
+      isWebview: true,
     ),
   ];
 
@@ -152,7 +174,7 @@ class _ToolsPageState extends State<ToolsPage> {
                 final tool = _tools[index];
                 return _ToolCard(
                   tool: tool,
-                  isLink: tool.isLink,
+                  isWebview: tool.isWebview,
                   onTap: () => setState(() => _selectedTool = tool.id),
                 );
               },
@@ -170,26 +192,26 @@ class ToolInfo {
   final String description;
   final IconData icon;
   final Color color;
-  final bool isLink;
+  final bool isWebview;
   ToolInfo({
     required this.id,
     required this.title,
     required this.description,
     required this.icon,
     required this.color,
-    this.isLink = true,
+    this.isWebview = false,
   });
 }
 
 class _ToolCard extends StatelessWidget {
   final ToolInfo tool;
   final VoidCallback onTap;
-  final bool isLink;
+  final bool isWebview;
 
   const _ToolCard({
     required this.tool,
     required this.onTap,
-    this.isLink = false,
+    this.isWebview = false,
   });
 
   @override
@@ -199,7 +221,7 @@ class _ToolCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: (isLink)
+        onTap: (isWebview)
             ? () {
                 final webViewProvider = Provider.of<WebViewProvider>(
                   context,
@@ -207,7 +229,7 @@ class _ToolCard extends StatelessWidget {
                 );
                 webViewProvider.openUrl(tool.id, title: tool.title);
               }
-            : onTap,
+            : () => launchUrl(Uri.parse(tool.id)),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
