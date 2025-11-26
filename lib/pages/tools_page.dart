@@ -3,6 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/utils/responsive.dart';
 import '../core/providers/webview_provider.dart';
+import '../tools/expense_manager_tool.dart';
+import '../tools/json_formatter_tool.dart';
+import '../tools/json_analyzer_tool.dart';
+import '../tools/json_multi_correlator_tool.dart';
+
 
 class ToolsPage extends StatefulWidget {
   const ToolsPage({super.key});
@@ -16,12 +21,13 @@ class _ToolsPageState extends State<ToolsPage> {
 
   final List<ToolInfo> _tools = [
     ToolInfo(
-      id: 'https://awes0m.github.io/expense_tracker/',
-      title: 'Expense Tracker',
+      id: 'assets/expense_manger.html',
+      title: 'Expense Manager',
       description: 'Track your expenses and manage your budget!',
       icon: Icons.money,
       color: Colors.teal,
       isWebview: false,
+      isLocalAsset: true,
     ),
     ToolInfo(
       id: 'https://awes0m.github.io/numero_uno/',
@@ -30,6 +36,7 @@ class _ToolsPageState extends State<ToolsPage> {
       icon: Icons.numbers_outlined,
       color: Colors.deepOrange,
       isWebview: true,
+      isLocalAsset: false,
     ),
     ToolInfo(
       id: 'https://awes0m.github.io/fluttering_drums/',
@@ -39,31 +46,35 @@ class _ToolsPageState extends State<ToolsPage> {
       icon: Icons.music_note,
       color: Colors.blue,
       isWebview: false,
+      isLocalAsset: false,
     ),
 
     ToolInfo(
-      id: 'https://awes0m.github.io/cybersec_tools/smartJsonFormatterAnalyzer.html',
+      id: 'assets/smartJsonFormatterAnalyzer.html',
       title: 'Smart Json Formatter',
       description: 'Format JSON data and access various cybersecurity tools',
       icon: Icons.javascript_rounded,
       color: Colors.purple,
-      isWebview: true,
+      isWebview: false,
+      isLocalAsset: true,
     ),
     ToolInfo(
-      id: 'https://awes0m.github.io/cybersec_tools/jsonCorelatorAnalyzer.html',
+      id: 'assets/jsonCorelatorAnalyzer.html',
       title: 'Json Analyzer HQ',
       description: 'Format JSON data and access various cybersecurity tools',
       icon: Icons.cabin,
       color: Colors.lightGreen,
       isWebview: false,
+      isLocalAsset: true,
     ),
     ToolInfo(
-      id: 'https://awes0m.github.io/cybersec_tools/json_multi_corelator.html',
+      id: 'assets/json_multi_corelator.html',
       title: 'Multi Json Corelator',
       description: 'Format JSON data and access various cybersecurity tools',
       icon: Icons.currency_bitcoin_rounded,
       color: Colors.lightGreen,
       isWebview: false,
+      isLocalAsset: true,
     ),
     ToolInfo(
       id: 'https://awes0m.github.io/fortpolio/',
@@ -72,21 +83,20 @@ class _ToolsPageState extends State<ToolsPage> {
       icon: Icons.more_horiz,
       color: Colors.blue,
       isWebview: true,
+      isLocalAsset: false,
     ),
   ];
 
-  Widget _buildGameWidget(String gameId) {
-    switch (gameId) {
-      // case 'snake':
-      //   return const SnakeGame();
-      // case 'rps':
-      //   return const RockPaperScissorsGame();
-      // case '2048':
-      //   return const Game2048();
-      // case 'tictactoe':
-      //   return const TicTacToeGame();
-      // case 'memory':
-      //   return const MemoryMatchGame();
+  Widget _buildToolWidget(String toolId) {
+    switch (toolId) {
+      case 'assets/expense_manger.html':
+        return const ExpenseManagerTool();
+      case 'assets/smartJsonFormatterAnalyzer.html':
+        return const JsonFormatterTool();
+      case 'assets/jsonCorelatorAnalyzer.html':
+        return const JsonAnalyzerTool();
+      case 'assets/json_multi_corelator.html':
+        return const JsonMultiCorrelatorTool();
       default:
         return const SizedBox();
     }
@@ -138,7 +148,7 @@ class _ToolsPageState extends State<ToolsPage> {
                       alignment: Alignment.topCenter,
                       child: ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: maxContentWidth),
-                        child: _buildGameWidget(_selectedTool!),
+                        child: _buildToolWidget(_selectedTool!),
                       ),
                     ),
                   ),
@@ -193,6 +203,7 @@ class ToolInfo {
   final IconData icon;
   final Color color;
   final bool isWebview;
+  final bool isLocalAsset;
   ToolInfo({
     required this.id,
     required this.title,
@@ -200,6 +211,7 @@ class ToolInfo {
     required this.icon,
     required this.color,
     this.isWebview = false,
+    this.isLocalAsset = false,
   });
 }
 
@@ -221,15 +233,17 @@ class _ToolCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: (isWebview)
-            ? () {
-                final webViewProvider = Provider.of<WebViewProvider>(
-                  context,
-                  listen: false,
-                );
-                webViewProvider.openUrl(tool.id, title: tool.title);
-              }
-            : () => launchUrl(Uri.parse(tool.id)),
+        onTap: tool.isLocalAsset
+            ? onTap
+            : (isWebview)
+                ? () {
+                    final webViewProvider = Provider.of<WebViewProvider>(
+                      context,
+                      listen: false,
+                    );
+                    webViewProvider.openUrl(tool.id, title: tool.title);
+                  }
+                : () => launchUrl(Uri.parse(tool.id)),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(

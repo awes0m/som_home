@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
-import 'package:web/web.dart' as web;
-import 'dart:ui_web' as ui_web;
+
 import '../core/providers/webview_provider.dart';
 
 class WebViewPage extends StatefulWidget {
@@ -12,42 +12,9 @@ class WebViewPage extends StatefulWidget {
 }
 
 class _WebViewPageState extends State<WebViewPage> {
-  final Map<String, String> _iframeViewTypes = {};
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  void _registerIframe(String tabId, String url) {
-    if (!_iframeViewTypes.containsKey(tabId)) {
-      final viewType = 'iframe-$tabId';
-      _iframeViewTypes[tabId] = viewType;
-      
-      // Register the iframe element
-      ui_web.platformViewRegistry.registerViewFactory(
-        viewType,
-        (int viewId) {
-          final iframe = web.HTMLIFrameElement()
-            ..src = url
-            ..style.border = 'none'
-            ..style.width = '100%'
-            ..style.height = '100%';
-          
-          // Listen for load events to update loading state
-          iframe.onLoad.listen((_) {
-            final provider = context.read<WebViewProvider>();
-            provider.updateTabLoading(tabId, false);
-            
-            // Note: Cannot access iframe content due to CORS restrictions
-            // Title will remain as the URL or be set externally
-          });
-          
-          return iframe;
-        },
-      );
-    }
-  }
+  final Map<String, InAppWebViewController?> _controllers = {};
+  final Map<String, bool> _canGoBack = {};
+  final Map<String, bool> _canGoForward = {};
 
   @override
   Widget build(BuildContext context) {
@@ -61,9 +28,7 @@ class _WebViewPageState extends State<WebViewPage> {
           children: [
             if (webViewProvider.tabs.length > 1) _buildTabBar(webViewProvider),
             _buildWebViewControls(webViewProvider),
-            Expanded(
-              child: _buildWebViewContent(webViewProvider),
-            ),
+            Expanded(child: _buildWebViewContent(webViewProvider)),
           ],
         );
       },
@@ -78,20 +43,24 @@ class _WebViewPageState extends State<WebViewPage> {
           Icon(
             Icons.web,
             size: 64,
-            color: Theme.of(context).colorScheme.primary.withValues(alpha:0.5),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
             'No web pages open',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Open a bookmark or enter a URL to browse websites',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.5),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             textAlign: TextAlign.center,
           ),
@@ -107,7 +76,7 @@ class _WebViewPageState extends State<WebViewPage> {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha:0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -117,21 +86,26 @@ class _WebViewPageState extends State<WebViewPage> {
         itemBuilder: (context, index) {
           final tab = provider.tabs[index];
           final isActive = index == provider.currentTabIndex;
-          
+
           return Container(
             constraints: const BoxConstraints(maxWidth: 200, minWidth: 120),
             child: Material(
-              color: isActive 
+              color: isActive
                   ? Theme.of(context).colorScheme.surface
                   : Colors.transparent,
               child: InkWell(
                 onTap: () => provider.switchToTab(index),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     border: Border(
                       right: BorderSide(
-                        color: Theme.of(context).colorScheme.outline.withValues(alpha:0.2),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withValues(alpha: 0.2),
                       ),
                     ),
                   ),
@@ -150,25 +124,32 @@ class _WebViewPageState extends State<WebViewPage> {
                         Icon(
                           Icons.web,
                           size: 16,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.7),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           tab.title,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontWeight: isActive
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 4),
                       InkWell(
-                        onTap: () => provider.closeTab(tab.id),
+                        onTap: () => _handleCloseTab(provider, tab.id),
                         child: Icon(
                           Icons.close,
                           size: 16,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.7),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -186,13 +167,17 @@ class _WebViewPageState extends State<WebViewPage> {
     final currentTab = provider.currentTab;
     if (currentTab == null) return const SizedBox.shrink();
 
+    final canGoBack = _canGoBack[currentTab.id] ?? false;
+    final canGoForward = _canGoForward[currentTab.id] ?? false;
+    final controller = _controllers[currentTab.id];
+
     return Container(
       height: 56,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outline.withValues(alpha:0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           ),
         ),
       ),
@@ -200,51 +185,38 @@ class _WebViewPageState extends State<WebViewPage> {
       child: Row(
         children: [
           IconButton(
-            onPressed: () {
-              // Refresh functionality - recreate iframe
-              _iframeViewTypes.remove(currentTab.id);
-              provider.updateTabLoading(currentTab.id, true);
-              setState(() {});
-            },
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
+            onPressed: canGoBack
+                ? () async {
+                    await controller?.goBack();
+                    await _updateNavigationState(currentTab.id);
+                  }
+                : null,
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            tooltip: 'Back',
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              height: 36,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha:0.2),
-                ),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.lock_outline,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.7),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      currentTab.url,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.8),
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
           IconButton(
-            onPressed: () => provider.closeTab(currentTab.id),
+            onPressed: canGoForward
+                ? () async {
+                    await controller?.goForward();
+                    await _updateNavigationState(currentTab.id);
+                  }
+                : null,
+            icon: const Icon(Icons.arrow_forward_ios_rounded),
+            tooltip: 'Forward',
+          ),
+          IconButton(
+            onPressed: controller == null
+                ? null
+                : () async {
+                    await controller.reload();
+                    provider.updateTabLoading(currentTab.id, true);
+                  },
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Reload',
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: () => _handleCloseTab(provider, currentTab.id),
             icon: const Icon(Icons.close),
             tooltip: 'Close tab',
           ),
@@ -254,19 +226,101 @@ class _WebViewPageState extends State<WebViewPage> {
   }
 
   Widget _buildWebViewContent(WebViewProvider provider) {
-    final currentTab = provider.currentTab;
-    if (currentTab == null) return const SizedBox.shrink();
-
-    _registerIframe(currentTab.id, currentTab.url);
-    final viewType = _iframeViewTypes[currentTab.id]!;
+    final tabs = provider.tabs;
+    if (tabs.isEmpty) return const SizedBox.shrink();
+    _pruneOrphanedState(tabs);
+    final index = provider.currentTabIndex < 0
+        ? 0
+        : provider.currentTabIndex >= tabs.length
+        ? tabs.length - 1
+        : provider.currentTabIndex;
 
     return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-      ),
-      child: HtmlElementView(
-        viewType: viewType,
+      decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface),
+      child: IndexedStack(
+        index: index,
+        children: tabs.map((tab) => _buildInAppWebView(provider, tab)).toList(),
       ),
     );
+  }
+
+  Widget _buildInAppWebView(WebViewProvider provider, WebViewTab tab) {
+    return InAppWebView(
+      key: ValueKey('webview-${tab.id}'),
+      initialUrlRequest: URLRequest(url: WebUri(tab.url)),
+      initialSettings: InAppWebViewSettings(
+        javaScriptEnabled: true,
+        allowsBackForwardNavigationGestures: true,
+        mediaPlaybackRequiresUserGesture: false,
+        transparentBackground: true,
+      ),
+      onWebViewCreated: (controller) {
+        setState(() {
+          _controllers[tab.id] = controller;
+        });
+        _updateNavigationState(tab.id);
+      },
+      onLoadStart: (controller, url) {
+        provider.updateTabLoading(tab.id, true);
+      },
+      onLoadStop: (controller, url) async {
+        provider.updateTabLoading(tab.id, false);
+        if (url != null) {
+          provider.updateTabUrl(tab.id, url.toString());
+        }
+        await _updateNavigationState(tab.id);
+      },
+      onReceivedError: (controller, request, error) {
+        provider.updateTabLoading(tab.id, false);
+      },
+      onTitleChanged: (controller, title) {
+        if (title != null && title.trim().isNotEmpty) {
+          provider.updateTabTitle(tab.id, title);
+        }
+      },
+      onUpdateVisitedHistory: (controller, url, androidIsReload) {
+        if (url != null) {
+          provider.updateTabUrl(tab.id, url.toString());
+        }
+      },
+    );
+  }
+
+  Future<void> _updateNavigationState(String tabId) async {
+    final controller = _controllers[tabId];
+    if (controller == null) return;
+    final canGoBack = await controller.canGoBack();
+    final canGoForward = await controller.canGoForward();
+    if (!mounted) return;
+    setState(() {
+      _canGoBack[tabId] = canGoBack;
+      _canGoForward[tabId] = canGoForward;
+    });
+  }
+
+  void _handleCloseTab(WebViewProvider provider, String tabId) {
+    setState(() {
+      _controllers.remove(tabId);
+      _canGoBack.remove(tabId);
+      _canGoForward.remove(tabId);
+    });
+    provider.closeTab(tabId);
+  }
+
+  void _pruneOrphanedState(List<WebViewTab> tabs) {
+    final validIds = tabs.map((tab) => tab.id).toSet();
+    final hasOrphan =
+        _controllers.keys.any((id) => !validIds.contains(id)) ||
+        _canGoBack.keys.any((id) => !validIds.contains(id)) ||
+        _canGoForward.keys.any((id) => !validIds.contains(id));
+    if (!hasOrphan) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _controllers.removeWhere((key, value) => !validIds.contains(key));
+        _canGoBack.removeWhere((key, value) => !validIds.contains(key));
+        _canGoForward.removeWhere((key, value) => !validIds.contains(key));
+      });
+    });
   }
 }

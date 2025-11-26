@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:flutter/foundation.dart';
+import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
+import 'package:webview_flutter_web/webview_flutter_web.dart';
 import 'package:som_home/pages/tools_page.dart';
 
 import 'firebase_options.dart';
@@ -28,7 +31,11 @@ import 'pages/forgot_password_page.dart';
 import 'pages/webview_page.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();  // Register the web implementation for webview_flutter only on web platform
+  if (kIsWeb) {
+    WebViewPlatform.instance = WebWebViewPlatform();
+  }
+  
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await FirebaseAppCheck.instance.activate(
     // You can also use a `ReCaptchaEnterpriseProvider` provider instance as an
@@ -157,7 +164,10 @@ class _MainNavigationState extends State<MainNavigation> {
     super.initState();
     // Set up callback for automatic navigation to webview tab
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+      final webViewProvider = Provider.of<WebViewProvider>(
+        context,
+        listen: false,
+      );
       webViewProvider.setOnTabOpenedCallback((tabIndex) {
         setState(() {
           _index = tabIndex;
@@ -165,7 +175,7 @@ class _MainNavigationState extends State<MainNavigation> {
       });
     });
   }
-  
+
   List<Widget> get _pages {
     final webViewProvider = context.watch<WebViewProvider>();
     const basePages = [
@@ -176,7 +186,7 @@ class _MainNavigationState extends State<MainNavigation> {
       ToolsPage(),
       SettingsPage(),
     ];
-    
+
     if (webViewProvider.hasOpenTabs) {
       return [
         ...basePages.take(1), // Home
@@ -184,14 +194,21 @@ class _MainNavigationState extends State<MainNavigation> {
         ...basePages.skip(1), // Rest of the pages
       ];
     }
-    
+
     return basePages;
   }
-  
+
   List<String> get _titles {
     final webViewProvider = context.watch<WebViewProvider>();
-    const baseTitles = ['Home', 'Bookmarks', 'Tasks', 'Games', 'Tools','Settings'];
-    
+    const baseTitles = [
+      'Home',
+      'Bookmarks',
+      'Tasks',
+      'Games',
+      'Tools',
+      'Settings',
+    ];
+
     if (webViewProvider.hasOpenTabs) {
       final currentTab = webViewProvider.currentTab;
       final webViewTitle = currentTab?.title ?? 'Browser';
@@ -201,7 +218,7 @@ class _MainNavigationState extends State<MainNavigation> {
         ...baseTitles.skip(1), // Rest of the titles
       ];
     }
-    
+
     return baseTitles;
   }
 
@@ -239,7 +256,7 @@ class _MainNavigationState extends State<MainNavigation> {
         label: 'Settings',
       ),
     ];
-    
+
     if (webViewProvider.hasOpenTabs) {
       return [
         ...baseDestinations.take(1), // Home
@@ -251,7 +268,7 @@ class _MainNavigationState extends State<MainNavigation> {
         ...baseDestinations.skip(1), // Rest of the destinations
       ];
     }
-    
+
     return baseDestinations;
   }
 
