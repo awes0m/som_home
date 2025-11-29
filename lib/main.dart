@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 import 'package:webview_flutter_web/webview_flutter_web.dart';
 import 'package:som_home/pages/tools_page.dart';
+import 'package:som_home/pages/super_dash_page.dart';
 
 import 'firebase_options.dart';
 import 'core/providers/theme_provider.dart';
@@ -183,6 +184,7 @@ class _MainNavigationState extends State<MainNavigation> {
       BookmarksPage(),
       TasksPage(),
       GamesPage(),
+      SuperDashPage(),
       ToolsPage(),
       SettingsPage(),
     ];
@@ -205,6 +207,7 @@ class _MainNavigationState extends State<MainNavigation> {
       'Bookmarks',
       'Tasks',
       'Games',
+      'Super Dash',
       'Tools',
       'Settings',
     ];
@@ -244,6 +247,11 @@ class _MainNavigationState extends State<MainNavigation> {
         icon: Icon(Icons.videogame_asset_outlined),
         selectedIcon: Icon(Icons.videogame_asset),
         label: 'Games',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.sports_esports_outlined),
+        selectedIcon: Icon(Icons.sports_esports),
+        label: 'Super Dash',
       ),
       NavigationDestination(
         icon: Icon(Icons.build_outlined),

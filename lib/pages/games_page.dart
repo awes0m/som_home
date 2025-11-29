@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../games/chess.dart';
 import '../games/memory_match_game.dart';
 import '../games/rock_paper_scissors_game.dart';
 import '../games/tic_tac_toe_game.dart';
@@ -25,6 +26,13 @@ class _GamesPageState extends State<GamesPage> {
       description: 'Classic snake game - eat the food and grow!',
       icon: Icons.games_outlined,
       color: Colors.green,
+    ),
+    GameInfo(
+      id: 'chess',
+      title: 'chess♟️',
+      description: 'classic chess',
+      icon: Icons.abc,
+      color: Colors.grey,
     ),
     GameInfo(
       id: 'rps',
@@ -84,6 +92,8 @@ class _GamesPageState extends State<GamesPage> {
     switch (gameId) {
       case 'snake':
         return const SnakeGame();
+      case 'chess':
+        return const ChessMainmenuScreen();
       case 'rps':
         return const RockPaperScissorsGame();
       case '2048':
@@ -251,10 +261,15 @@ class _GameCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: (isLink) ? () {
-          final webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
-          webViewProvider.openUrl(game.id, title: game.title);
-        } : onTap,
+        onTap: (isLink)
+            ? () {
+                final webViewProvider = Provider.of<WebViewProvider>(
+                  context,
+                  listen: false,
+                );
+                webViewProvider.openUrl(game.id, title: game.title);
+              }
+            : onTap,
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
