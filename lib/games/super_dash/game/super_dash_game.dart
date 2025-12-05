@@ -33,18 +33,18 @@ class SuperDashGame extends LeapGame
     this.customBundle,
     this.inMapTester = false,
   }) : super(
-          tileSize: 64,
-          configuration: const LeapConfiguration(
-            tiled: TiledOptions(
-              atlasMaxX: 4048,
-              atlasMaxY: 4048,
-              tsxPackingFilter: _tsxPackingFilter,
-              layerPaintFactory: _layerPaintFactory,
-              atlasPackingSpacingX: 4,
-              atlasPackingSpacingY: 4,
-            ),
-          ),
-        );
+         tileSize: 64,
+         configuration: const LeapConfiguration(
+           tiled: TiledOptions(
+             atlasMaxX: 4048,
+             atlasMaxY: 4048,
+             tsxPackingFilter: _tsxPackingFilter,
+             layerPaintFactory: _layerPaintFactory,
+             atlasPackingSpacingX: 4,
+             atlasPackingSpacingY: 4,
+           ),
+         ),
+       );
 
   static final _cameraViewport = Vector2(592, 1024);
   static const prefix = 'assets/map/';
@@ -74,15 +74,11 @@ class SuperDashGame extends LeapGame
   List<Tileset> get tilesets => leapMap.tiledMap.tileMap.map.tilesets;
 
   Tileset get itemsTileset {
-    return tilesets.firstWhere(
-      (tileset) => tileset.name == 'tile_items_v2',
-    );
+    return tilesets.firstWhere((tileset) => tileset.name == 'tile_items_v2');
   }
 
   Tileset get enemiesTileset {
-    return tilesets.firstWhere(
-      (tileset) => tileset.name == 'tile_enemies_v2',
-    );
+    return tilesets.firstWhere((tileset) => tileset.name == 'tile_enemies_v2');
   }
 
   void addInputListener(VoidCallback listener) {
@@ -124,10 +120,7 @@ class SuperDashGame extends LeapGame
       height: _cameraViewport.y,
     )..world = world;
 
-    images = Images(
-      prefix: prefix,
-      bundle: customBundle,
-    );
+    images = Images(prefix: prefix, bundle: customBundle);
 
     itemsSpritesheet = SpriteSheet(
       image: await images.load('objects/tile_items_v2.png'),
@@ -146,9 +139,7 @@ class SuperDashGame extends LeapGame
       levelSize: leapMap.tiledMap.size.clone(),
       cameraViewport: _cameraViewport,
     );
-    unawaited(
-      world.addAll([player]),
-    );
+    unawaited(world.addAll([player]));
 
     await _addSpawners();
     _addTreeHouseFrontLayer();
@@ -173,14 +164,7 @@ class SuperDashGame extends LeapGame
   }
 
   void _addTreeHouseSign() {
-    world.add(
-      TreeSign(
-        position: Vector2(
-          448,
-          1862,
-        ),
-      ),
-    );
+    world.add(TreeSign(position: Vector2(448, 1862)));
   }
 
   void _addTreeHouseFrontLayer() {
@@ -193,14 +177,10 @@ class SuperDashGame extends LeapGame
     camera.backdrop = RectangleComponent(
       size: size.clone(),
       paint: Paint()
-        ..shader = ui.Gradient.linear(
-          Offset.zero,
-          Offset(size.x, size.y),
-          [
-            colors.$1,
-            colors.$2,
-          ],
-        ),
+        ..shader = ui.Gradient.linear(Offset.zero, Offset(size.x, size.y), [
+          colors.$1,
+          colors.$2,
+        ]),
     );
   }
 
@@ -214,55 +194,50 @@ class SuperDashGame extends LeapGame
 
     _resetEntities();
 
-    Future<void>.delayed(
-      const Duration(seconds: 1),
-      () async {
-        await loadWorldAndMap(
-          images: images,
-          prefix: prefix,
-          bundle: customBundle,
-          tiledMapPath: _sections.first,
-        );
-        if (isLastSection || isFirstSection) {
-          _addTreeHouseFrontLayer();
-        }
+    Future<void>.delayed(const Duration(seconds: 1), () async {
+      await loadWorldAndMap(
+        images: images,
+        prefix: prefix,
+        bundle: customBundle,
+        tiledMapPath: _sections.first,
+      );
+      if (isLastSection || isFirstSection) {
+        _addTreeHouseFrontLayer();
+      }
 
-        if (isFirstSection) {
-          _addTreeHouseSign();
-        }
-        final newPlayer = Player(
-          levelSize: leapMap.tiledMap.size.clone(),
-          cameraViewport: _cameraViewport,
-        );
-        await world.add(newPlayer);
+      if (isFirstSection) {
+        _addTreeHouseSign();
+      }
+      final newPlayer = Player(
+        levelSize: leapMap.tiledMap.size.clone(),
+        cameraViewport: _cameraViewport,
+      );
+      await world.add(newPlayer);
 
-        await newPlayer.mounted;
-        await _addSpawners();
-        overlays.add('tapToJump');
-      },
-    );
+      await newPlayer.mounted;
+      await _addSpawners();
+      overlays.add('tapToJump');
+    });
 
     if (buildContext != null) {
       final score = gameBloc.state.score;
-      Navigator.of(buildContext!).push(
-        ScorePage.route(score: score),
-      );
+      Navigator.of(buildContext!).push(ScorePage.route(score: score));
     }
   }
 
   void _resetEntities() {
     children.whereType<ObjectGroupProximityBuilder<Player>>().forEach(
-          (spawner) => spawner.removeFromParent(),
-        );
+      (spawner) => spawner.removeFromParent(),
+    );
     world.firstChild<TreeHouseFront>()?.removeFromParent();
     world.firstChild<TreeSign>()?.removeFromParent();
 
-    leapMap.children
-        .whereType<Enemy>()
-        .forEach((enemy) => enemy.removeFromParent());
-    leapMap.children
-        .whereType<Item>()
-        .forEach((enemy) => enemy.removeFromParent());
+    leapMap.children.whereType<Enemy>().forEach(
+      (enemy) => enemy.removeFromParent(),
+    );
+    leapMap.children.whereType<Item>().forEach(
+      (enemy) => enemy.removeFromParent(),
+    );
   }
 
   Future<void> _addSpawners() async {
@@ -345,9 +320,7 @@ class SuperDashGame extends LeapGame
     if (descendants().whereType<CameraDebugger>().isEmpty) {
       final player = world.firstChild<Player>()!;
 
-      final cameraDebugger = CameraDebugger(
-        position: player.position.clone(),
-      );
+      final cameraDebugger = CameraDebugger(position: player.position.clone());
       world.add(cameraDebugger);
 
       final anchor = PlayerCameraAnchor(
@@ -357,8 +330,8 @@ class SuperDashGame extends LeapGame
       cameraDebugger.add(anchor);
       camera.follow(anchor);
 
-      final proximityBuilders =
-          descendants().whereType<ObjectGroupProximityBuilder<Player>>();
+      final proximityBuilders = descendants()
+          .whereType<ObjectGroupProximityBuilder<Player>>();
       for (final proximityBuilder in proximityBuilders) {
         proximityBuilder.currentReference = cameraDebugger;
       }
@@ -390,13 +363,7 @@ class SuperDashGame extends LeapGame
     }
 
     show();
-    add(
-      TimerComponent(
-        period: 1,
-        repeat: true,
-        onTick: show,
-      ),
-    );
+    add(TimerComponent(period: 1, repeat: true, onTick: show));
   }
 
   void _addMapTesterFeatures() {
@@ -405,10 +372,7 @@ class SuperDashGame extends LeapGame
       FpsTextComponent(
         position: Vector2(0, 0),
         textRenderer: TextPaint(
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 20),
         ),
       ),
     );

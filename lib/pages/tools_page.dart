@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:som_home/tools/expense_manger/widgets/expense_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../core/utils/responsive.dart';
 import '../core/providers/webview_provider.dart';
-import '../tools/expense_manager_tool.dart';
 import '../tools/json_formatter_tool.dart';
 import '../tools/json_analyzer_tool.dart';
 import '../tools/json_multi_correlator_tool.dart';
+import '../tools/expense_manger/controllers/app_controller.dart';
 
 
 class ToolsPage extends StatefulWidget {
@@ -21,7 +22,7 @@ class _ToolsPageState extends State<ToolsPage> {
 
   final List<ToolInfo> _tools = [
     ToolInfo(
-      id: 'assets/expense_manger.html',
+      id: 'expense_manger',
       title: 'Expense Manager',
       description: 'Track your expenses and manage your budget!',
       icon: Icons.money,
@@ -89,8 +90,8 @@ class _ToolsPageState extends State<ToolsPage> {
 
   Widget _buildToolWidget(String toolId) {
     switch (toolId) {
-      case 'assets/expense_manger.html':
-        return const ExpenseManagerTool();
+      case 'expense_manger':
+        return const ExpensePage();
       case 'assets/smartJsonFormatterAnalyzer.html':
         return const JsonFormatterTool();
       case 'assets/jsonCorelatorAnalyzer.html':
@@ -107,12 +108,113 @@ class _ToolsPageState extends State<ToolsPage> {
     final isMobile = ResponsiveHelper.isMobile(context);
 
     if (_selectedTool != null) {
+      final tool = _tools.firstWhere((g) => g.id == _selectedTool);
+      List<Widget> actions = [];
+      Widget? floatingActionButton;
+
+      if (_selectedTool == 'expense_manger') {
+        actions = [
+          IconButton(
+            icon: Icon(Icons.brightness_6, size: isMobile ? 20 : 24),
+            onPressed: () => Provider.of<AppController>(context, listen: false).toggleTheme(),
+          ),
+          IconButton(
+            icon: Icon(Icons.save, size: isMobile ? 20 : 24),
+            onPressed: () => Provider.of<AppController>(context, listen: false).saveToFirebase(context),
+          ),
+          IconButton(
+            icon: Icon(Icons.cloud_download, size: isMobile ? 20 : 24),
+            onPressed: () => Provider.of<AppController>(context, listen: false).loadFromFirebase(context),
+          ),
+          PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert, size: isMobile ? 20 : 24),
+            onSelected: (String value) {
+              switch (value) {
+                case 'export_firebase':
+                  Provider.of<AppController>(context, listen: false).exportToFirebase(context);
+                  break;
+                case 'export_local':
+                  Provider.of<AppController>(context, listen: false).exportToLocalFile(context);
+                  break;
+                case 'import':
+                  Provider.of<AppController>(context, listen: false).importFromFile(context);
+                  break;
+                case 'save_local':
+                  Provider.of<AppController>(context, listen: false).saveLocal();
+                  break;
+                case 'load_local':
+                  Provider.of<AppController>(context, listen: false).loadLocal();
+                  break;
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'export_firebase',
+                child: Row(
+                  children: [
+                    Icon(Icons.cloud_upload, size: 18),
+                    SizedBox(width: 8),
+                    Text('Export to Firebase'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'export_local',
+                child: Row(
+                  children: [
+                    Icon(Icons.file_download, size: 18),
+                    SizedBox(width: 8),
+                    Text('Export to File'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'import',
+                child: Row(
+                  children: [
+                    Icon(Icons.file_upload, size: 18),
+                    SizedBox(width: 8),
+                    Text('Import from File'),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              const PopupMenuItem<String>(
+                value: 'save_local',
+                child: Row(
+                  children: [
+                    Icon(Icons.save_alt, size: 18),
+                    SizedBox(width: 8),
+                    Text('Save Local'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'load_local',
+                child: Row(
+                  children: [
+                    Icon(Icons.folder_open, size: 18),
+                    SizedBox(width: 8),
+                    Text('Load Local'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ];
+        floatingActionButton = FloatingActionButton.extended(
+          onPressed: Provider.of<AppController>(context, listen: false).addExpense,
+          label: const Text("Add Transaction"),
+          icon: const Icon(Icons.add),
+        );
+      }
+
       return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.black.withValues(alpha: 0.3),
           title: Text(
-            _tools.firstWhere((g) => g.id == _selectedTool).title,
+            tool.title,
             style: TextStyle(
               fontSize: ResponsiveHelper.getResponsiveFontSize(
                 context,
@@ -124,7 +226,9 @@ class _ToolsPageState extends State<ToolsPage> {
             icon: Icon(Icons.arrow_back, size: isMobile ? 20 : 24),
             onPressed: () => setState(() => _selectedTool = null),
           ),
+          actions: actions,
         ),
+        floatingActionButton: floatingActionButton,
         body: LayoutBuilder(
           builder: (context, constraints) {
             final double maxContentWidth = ResponsiveHelper.getMaxContentWidth(

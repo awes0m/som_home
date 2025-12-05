@@ -48,18 +48,20 @@ class AudioController {
   AudioController({
     int polyphony = 2,
     CreateAudioPlayer createPlayer = AudioPlayer.new,
-  })  : assert(polyphony >= 1, 'polyphony must be bigger or equals than 1'),
-        _musicPlayer = createPlayer(playerId: 'musicPlayer'),
-        _sfxPlayers = Iterable.generate(
-          polyphony,
-          (i) => createPlayer(playerId: 'sfxPlayer#$i'),
-        ).toList(growable: false),
-        _playlist = Queue.of(List<Song>.of(songs)..shuffle()) {
-    _musicPlayer.onPlayerComplete.listen(_changeSong);
+  })  : assert(kIsWeb || polyphony >= 1, 'polyphony must be bigger or equals than 1'),
+        _musicPlayer = kIsWeb ? null : createPlayer(playerId: 'musicPlayer'),
+        _sfxPlayers = kIsWeb
+            ? <AudioPlayer>[]
+            : Iterable.generate(
+                polyphony,
+                (i) => createPlayer(playerId: 'sfxPlayer#$i'),
+              ).toList(growable: false),
+        _playlist = kIsWeb ? Queue<Song>() : Queue.of(List<Song>.of(songs)..shuffle()) {
+    _musicPlayer?.onPlayerComplete.listen(_changeSong);
   }
   static final _log = Logger('AudioController');
 
-  final AudioPlayer _musicPlayer;
+  final AudioPlayer? _musicPlayer;
 
   /// This is a list of [AudioPlayer] instances which are rotated to play
   /// sound effects.
@@ -125,7 +127,7 @@ class AudioController {
   void dispose() {
     _lifecycleNotifier?.removeListener(_handleAppLifecycle);
     _stopAllSound();
-    _musicPlayer.dispose();
+    _musicPlayer?.dispose();
     for (final player in _sfxPlayers) {
       player.dispose();
     }
@@ -147,6 +149,7 @@ class AudioController {
   /// [SettingsController.muted] is `true` or if its
   /// [SettingsController.soundsOn] is `false`.
   void playSfx(Sfx current) {
+    if (_sfxPlayers.isEmpty) return;
     final muted = _settings?.muted.value ?? true;
     if (muted) {
       _log.info(() => 'Ignoring playing sound ($sfx) because audio is muted.');
@@ -168,8 +171,10 @@ class AudioController {
 
   void _changeSong(void _) {
     _log.info('Last song finished playing.');
-    // Put the song that just finished playing to the end of the playlist.
-    _playlist.addLast(_playlist.removeFirst());
+    if (_playlist.isNotEmpty) {
+      // Put the song that just finished playing to the end of the playlist.
+      _playlist.addLast(_playlist.removeFirst());
+    }
     // Play the next song.
     _playFirstSongInPlaylist();
   }
@@ -215,20 +220,22 @@ class AudioController {
   }
 
   Future<void> _playFirstSongInPlaylist() async {
+    if (_musicPlayer == null || _playlist.isEmpty) return;
     _log.info(() => 'Playing ${_playlist.first} now.');
-    await _musicPlayer.play(
+    await _musicPlayer!.play(
       AssetSource('music/${_playlist.first.filename}'),
       volume: 0.3,
     );
   }
 
   Future<void> _resumeMusic() async {
+    if (_musicPlayer == null) return;
     _log.info('Resuming music');
-    switch (_musicPlayer.state) {
+    switch (_musicPlayer!.state) {
       case PlayerState.paused:
         _log.info('Calling _musicPlayer.resume()');
         try {
-          await _musicPlayer.resume();
+          await _musicPlayer!.resume();
         } catch (e) {
           // Sometimes, resuming fails with an "Unexpected" error.
           _log.severe(e);
@@ -264,15 +271,15 @@ class AudioController {
   }
 
   void startMusic() {
-    if (_musicPlayer.state != PlayerState.playing) {
+    if (_musicPlayer?.state != PlayerState.playing) {
       _log.info('starting music');
       _playFirstSongInPlaylist();
     }
   }
 
   void _stopAllSound() {
-    if (_musicPlayer.state == PlayerState.playing) {
-      _musicPlayer.pause();
+    if (_musicPlayer?.state == PlayerState.playing) {
+      _musicPlayer!.pause();
     }
     for (final player in _sfxPlayers) {
       player.stop();
@@ -281,8 +288,8 @@ class AudioController {
 
   void _stopMusic() {
     _log.info('Stopping music');
-    if (_musicPlayer.state == PlayerState.playing) {
-      _musicPlayer.pause();
+    if (_musicPlayer?.state == PlayerState.playing) {
+      _musicPlayer!.pause();
     }
   }
 }

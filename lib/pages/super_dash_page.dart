@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../super_dash/audio/audio.dart';
-import '../super_dash/game_intro/game_intro.dart';
-import '../super_dash/settings/settings_controller.dart';
-import '../super_dash/settings/persistence/persistence.dart';
-import '../super_dash/share/share.dart';
-import '../super_dash/l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+
+import '../games/super_dash/audio/audio.dart';
+import '../games/super_dash/game/game.dart';
+import '../games/super_dash/l10n/app_localizations.dart';
+import '../games/super_dash/settings/persistence/local_storage_settings_persistence.dart';
+import '../games/super_dash/settings/settings_controller.dart';
+import '../games/super_dash/share/share.dart';
 
 class SuperDashPage extends StatefulWidget {
-  const SuperDashPage({super.key});
+  final VoidCallback? onBackPressed;
+
+  const SuperDashPage({super.key, this.onBackPressed});
 
   @override
   State<SuperDashPage> createState() => _SuperDashPageState();
@@ -48,27 +52,23 @@ class _SuperDashPageState extends State<SuperDashPage> {
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
-      return const Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
-    return MultiRepositoryProvider(
-      providers: [
-        RepositoryProvider<AudioController>.value(value: audioController),
-        RepositoryProvider<SettingsController>.value(value: settingsController),
-        RepositoryProvider<ShareController>.value(value: shareController),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Super Som Dash',
-        theme: ThemeData(textTheme: const TextTheme()),
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        home: const GameIntroPage(),
+    return Localizations(
+      locale: const Locale('en', 'US'),
+      delegates: AppLocalizations.localizationsDelegates,
+      child: MultiProvider(
+        providers: [
+          Provider<AudioController>.value(value: audioController),
+          Provider<SettingsController>.value(value: settingsController),
+          Provider<ShareController>.value(value: shareController),
+          Provider<VoidCallback>.value(value: widget.onBackPressed ?? () {}),
+        ],
+        child: BlocProvider(
+          create: (context) => GameBloc(),
+          child: const Game(),
+        ),
       ),
     );
   }

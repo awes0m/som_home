@@ -11,14 +11,18 @@ class AudioButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final settingsController = context.watch<SettingsController>();
-    return ValueListenableBuilder<bool>(
-      valueListenable: settingsController.muted,
-      builder: (context, muted, child) => GameIconButton(
-        icon: muted ? Icons.volume_off : Icons.volume_up,
-        onPressed: context.read<SettingsController>().toggleMuted,
-      ),
-    );
+    try {
+      final settingsController = context.watch<SettingsController>();
+      return ValueListenableBuilder<bool>(
+        valueListenable: settingsController.muted,
+        builder: (context, muted, child) => GameIconButton(
+          icon: muted ? Icons.volume_off : Icons.volume_up,
+          onPressed: context.read<SettingsController>().toggleMuted,
+        ),
+      );
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
   }
 }
 

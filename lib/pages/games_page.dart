@@ -8,6 +8,7 @@ import '../games/_2048_game.dart';
 import '../games/snake_game.dart';
 import '../core/utils/responsive.dart';
 import '../core/providers/webview_provider.dart';
+import 'package:som_home/pages/super_dash_page.dart';
 
 class GamesPage extends StatefulWidget {
   const GamesPage({super.key});
@@ -20,6 +21,13 @@ class _GamesPageState extends State<GamesPage> {
   String? _selectedGame;
 
   final List<GameInfo> _games = [
+    GameInfo(
+      id: 'super_dash',
+      title: 'Super Dash',
+      description: 'Dash through obstacles and reach the finish line!',
+      icon: Icons.directions_run,
+      color: Colors.red,
+    ),
     GameInfo(
       id: 'snake',
       title: 'Snake',
@@ -90,6 +98,10 @@ class _GamesPageState extends State<GamesPage> {
 
   Widget _buildGameWidget(String gameId) {
     switch (gameId) {
+      case 'super_dash':
+        return SuperDashPage(
+          onBackPressed: () => setState(() => _selectedGame = null,),
+        );
       case 'snake':
         return const SnakeGame();
       case 'chess':
@@ -112,6 +124,15 @@ class _GamesPageState extends State<GamesPage> {
     final isMobile = ResponsiveHelper.isMobile(context);
 
     if (_selectedGame != null) {
+      final isFullscreenGame = ['super_dash', 'snake', 'chess', 'rps', '2048', 'tictactoe', 'memory'].contains(_selectedGame);
+      
+      if (isFullscreenGame) {
+        return Scaffold(
+          backgroundColor: Colors.transparent,
+          body: _buildGameWidget(_selectedGame!),
+        );
+      }
+      
       return Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(

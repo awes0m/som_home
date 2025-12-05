@@ -25,63 +25,70 @@ class GameOverPage extends StatelessWidget {
 
     return PageWithBackground(
       background: const GameBackground(),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: Assets.images.gameOverBg.provider(),
-            fit: BoxFit.cover,
-            alignment: isDesktop
-                ? const Alignment(0, -.5)
-                : Alignment.topCenter,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: Assets.images.gameOverBg.provider(),
+                fit: BoxFit.cover,
+                alignment: isDesktop
+                    ? const Alignment(0, -.5)
+                    : Alignment.topCenter,
+              ),
+            ),
+            child: SizedBox.expand(
+              child: Column(
+                children: [
+                  const Spacer(flex: 15),
+                  Text(
+                    l10n.gameOver,
+                    style: textTheme.headlineMedium?.copyWith(
+                      color: titleColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    l10n.betterLuckNextTime,
+                    style: textTheme.bodyLarge?.copyWith(color: titleColor),
+                  ),
+                  const Spacer(flex: 4),
+                  Text(
+                    l10n.totalScore,
+                    style: textTheme.bodyLarge?.copyWith(
+                      color: titleColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(flex: 2),
+                  const _ScoreWidget(),
+                  const Spacer(flex: 4),
+                  GameElevatedButton(
+                    label: l10n.submitScore,
+                    onPressed: () {
+                      context.read<ScoreBloc>().add(const ScoreSubmitted());
+                    },
+                  ),
+                  const Spacer(flex: 3),
+                  GameElevatedButton.icon(
+                    label: l10n.playAgain,
+                    icon: const Icon(Icons.refresh, size: 16),
+                    onPressed: context.flow<ScoreState>().complete,
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFFA6C3DF), Color(0xFF79AACA)],
+                    ),
+                  ),
+                  const Spacer(flex: 40),
+                  const BottomBar(),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
           ),
-        ),
-        child: Column(
-          children: [
-            const Spacer(flex: 15),
-            Text(
-              l10n.gameOver,
-              style: textTheme.headlineMedium?.copyWith(
-                color: titleColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              l10n.betterLuckNextTime,
-              style: textTheme.bodyLarge?.copyWith(color: titleColor),
-            ),
-            const Spacer(flex: 4),
-            Text(
-              l10n.totalScore,
-              style: textTheme.bodyLarge?.copyWith(
-                color: titleColor,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Spacer(flex: 2),
-            const _ScoreWidget(),
-            const Spacer(flex: 4),
-            GameElevatedButton(
-              label: l10n.submitScore,
-              onPressed: () {
-                context.read<ScoreBloc>().add(const ScoreSubmitted());
-              },
-            ),
-            const Spacer(flex: 3),
-            GameElevatedButton.icon(
-              label: l10n.playAgain,
-              icon: const Icon(Icons.refresh, size: 16),
-              onPressed: context.flow<ScoreState>().complete,
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFA6C3DF), Color(0xFF79AACA)],
-              ),
-            ),
-            const Spacer(flex: 40),
-            const BottomBar(),
-            const SizedBox(height: 16),
-          ],
-        ),
+        ],
       ),
     );
   }
