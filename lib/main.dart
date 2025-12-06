@@ -1,12 +1,13 @@
 // ignore_for_file: unused_element
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as provider;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/foundation.dart';
 import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 import 'package:webview_flutter_web/webview_flutter_web.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 
 import 'auth_wrapper.dart';
 import 'firebase_options.dart';
@@ -47,46 +48,48 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => BackgroundProvider()),
-        ChangeNotifierProvider(create: (_) => BookmarksProvider()),
-        ChangeNotifierProvider(create: (_) => TasksProvider()),
-        ChangeNotifierProvider(create: (_) => GreetingProvider()),
-        ChangeNotifierProvider(create: (_) => WebViewProvider()),
-        ChangeNotifierProvider(create: (_) => AppController()),
-      ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, theme, _) {
-          return MaterialApp(
-            title: 'Personal Homepage',
-            debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.blue,
-                brightness: Brightness.light,
+    return riverpod.ProviderScope(
+      child: provider.MultiProvider(
+        providers: [
+          provider.ChangeNotifierProvider(create: (_) => AuthProvider()),
+          provider.ChangeNotifierProvider(create: (_) => BackgroundProvider()),
+          provider.ChangeNotifierProvider(create: (_) => BookmarksProvider()),
+          provider.ChangeNotifierProvider(create: (_) => TasksProvider()),
+          provider.ChangeNotifierProvider(create: (_) => GreetingProvider()),
+          provider.ChangeNotifierProvider(create: (_) => WebViewProvider()),
+          provider.ChangeNotifierProvider(create: (_) => AppController()),
+        ],
+        child: riverpod.Consumer(
+          builder: (context, ref, _) {
+            final themeMode = ref.watch(themeNotifierProvider);
+            return MaterialApp(
+              title: 'Personal Homepage',
+              debugShowCheckedModeBanner: false,
+              theme: ThemeData(
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: Colors.blue,
+                  brightness: Brightness.light,
+                ),
+                useMaterial3: true,
               ),
-              useMaterial3: true,
-            ),
-            darkTheme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.blue,
-                brightness: Brightness.dark,
+              darkTheme: ThemeData(
+                colorScheme: ColorScheme.fromSeed(
+                  seedColor: Colors.blue,
+                  brightness: Brightness.dark,
+                ),
+                useMaterial3: true,
               ),
-              useMaterial3: true,
-            ),
-            themeMode: theme.themeMode,
-            home: const AuthWrapper(),
-            routes: {
-              '/home': (context) => const MainNavigation(),
-              '/sign-in': (context) => const SignInPage(),
-              '/sign-up': (context) => const SignUpPage(),
-              '/forgot-password': (context) => const ForgotPasswordPage(),
-            },
-          );
-        },
+              themeMode: themeMode,
+              home: const AuthWrapper(),
+              routes: {
+                '/home': (context) => const MainNavigation(),
+                '/sign-in': (context) => const SignInPage(),
+                '/sign-up': (context) => const SignUpPage(),
+                '/forgot-password': (context) => const ForgotPasswordPage(),
+              },
+            );
+          },
+        ),
       ),
     );
   }

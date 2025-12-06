@@ -1,32 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../storage/hive_service.dart';
 
-class ThemeProvider with ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.system;
-
-  ThemeProvider() {
-    _loadTheme();
-  }
-
-  ThemeMode get themeMode => _themeMode;
-
-  void _loadTheme() {
+class ThemeNotifier extends Notifier<ThemeMode> {
+  @override
+  ThemeMode build() {
+    // Load initial value (could be async, but Hive is synchronous here)
     final box = HiveService.getSettingsBox();
     final theme = box.get('theme_mode', defaultValue: 'system');
-    _themeMode = ThemeMode.values.firstWhere(
+    return ThemeMode.values.firstWhere(
       (e) => e.name == theme,
       orElse: () => ThemeMode.system,
     );
   }
 
   void loadThemeMode() {
-    _loadTheme();
-    notifyListeners();
+    // Reload from storage - in Riverpod, we can refetch or update state
+    final box = HiveService.getSettingsBox();
+    final theme = box.get('theme_mode', defaultValue: 'system');
+    final newMode = ThemeMode.values.firstWhere(
+      (e) => e.name == theme,
+      orElse: () => ThemeMode.system,
+    );
+    state = newMode;
   }
 
   void setThemeMode(ThemeMode mode) {
-    _themeMode = mode;
     HiveService.getSettingsBox().put('theme_mode', mode.name);
-    notifyListeners();
+    state = mode;
   }
 }
+
+// Provider declaration
+final themeNotifierProvider = NotifierProvider<ThemeNotifier, ThemeMode>(() {
+  return ThemeNotifier();
+});

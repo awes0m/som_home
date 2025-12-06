@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import 'package:provider/provider.dart';
 
 import 'package:web/web.dart' as web;
@@ -486,8 +487,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       _SettingsSection(
                         title: 'Appearance',
                         children: [
-                          Consumer<ThemeProvider>(
-                            builder: (context, themeProvider, _) {
+                          riverpod.Consumer(
+                            builder: (context, ref, _) {
+                              final themeMode = ref.watch(themeNotifierProvider);
                               return isMobile
                                   ?
                                     // Mobile - vertical layout for theme selector
@@ -616,14 +618,12 @@ class _SettingsPageState extends State<SettingsPage> {
                                                   ),
                                                 ),
                                               ],
-                                              selected: {
-                                                themeProvider.themeMode,
-                                              },
+                                              selected: {themeMode},
                                               onSelectionChanged:
                                                   (
                                                     Set<ThemeMode> newSelection,
                                                   ) {
-                                                    themeProvider.setThemeMode(
+                                                    ref.read(themeNotifierProvider.notifier).setThemeMode(
                                                       newSelection.first,
                                                     );
                                                   },
@@ -654,10 +654,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                             icon: Icon(Icons.settings_suggest),
                                           ),
                                         ],
-                                        selected: {themeProvider.themeMode},
+                                        selected: {themeMode},
                                         onSelectionChanged:
                                             (Set<ThemeMode> newSelection) {
-                                              themeProvider.setThemeMode(
+                                              ref.read(themeNotifierProvider.notifier).setThemeMode(
                                                 newSelection.first,
                                               );
                                             },
@@ -863,10 +863,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                     listen: false,
                                   ).loadBackground();
 
-                                  Provider.of<ThemeProvider>(
-                                    context,
-                                    listen: false,
-                                  ).loadThemeMode();
+                                  // Note: Theme loading is handled automatically by Riverpod
+                                  // No need to call loadThemeMode manually
 
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
